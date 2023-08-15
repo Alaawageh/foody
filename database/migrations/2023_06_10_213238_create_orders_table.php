@@ -20,7 +20,6 @@ return new class extends Migration
             $table->time('time_end')->nullable();//time_done
             $table->string('table_num')->default('sss');
             $table->double('total_price')->nullable();
-            $table->integer('tax')->nullable();
             $table->boolean('is_paid')->default('0');
             $table->foreignId('branch_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
