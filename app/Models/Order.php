@@ -13,8 +13,8 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'status' , 'time' , 'time_end' , 'estimated_time' ,
-        'table_num' , 'total_price' , 'tax' ,
+        'status' , 'time' , 'time_end' ,
+        'table_num' , 'total_price' ,
         'is_paid' , 'branch_id'
     ];
 
