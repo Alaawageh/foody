@@ -6,6 +6,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\ProductResource;
+use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
@@ -15,9 +16,15 @@ class ProductController extends Controller
     use ApiResponseTrait;
    
     
-    public function index()
+    public function index($categoryId)
     {
-        $products = ProductResource::collection(Product::with('ingredients')->get());
+        $category = Category::find($categoryId);
+
+        if (!$category) {
+            return $this->apiResponse(null ,'Category not found', 404);
+        }
+
+        $products = $category->products()->get();
         return $this->apiResponse($products,'success',200);
     }
 

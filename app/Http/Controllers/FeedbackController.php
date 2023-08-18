@@ -6,14 +6,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\FeedbackResource;
 use App\Models\Feedback;
+use App\Models\Order;
 
 class FeedbackController extends Controller
 {
     use ApiResponseTrait;
     
-    public function index()
+    public function index($orderId)
     {
-        $feedbacks = FeedbackResource::collection(Feedback::get());
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return $this->apiResponse(null ,'Order not found', 404);
+        }
+
+        $feedbacks = $order->feedbacks()->get();
         return $this->apiResponse($feedbacks,'success',200);
     }
 

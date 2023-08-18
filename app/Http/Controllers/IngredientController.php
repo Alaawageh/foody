@@ -6,15 +6,22 @@ use App\Models\Ingredient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\IngredientResource;
+use App\Models\Product;
 use Illuminate\Support\Facades\File;
 
 class IngredientController extends Controller
 {
     use ApiResponseTrait;
     
-    public function index()
+    public function index($productId)
     {
-        $ingredients = IngredientResource::collection(Ingredient::get());
+        $product = Product::find($productId);
+
+        if (!$product) {
+            return $this->apiResponse(null ,'Product not found', 404);
+        }
+
+        $ingredients = $product->ingredients()->get();
         return $this->apiResponse($ingredients,'success',200);
     }
 

@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Resources\UserResource; 
+use App\Http\Resources\UserResource;
+use App\Models\Branch;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 
@@ -34,6 +35,7 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return response()->json($validator->errors(), 422);
             }
+            $request->query->remove('password');
 
             $credentials = $request->only(['email', 'password']);
 
@@ -76,20 +78,29 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
+        if($request->query()){
+            return response()->json(null, 'Error');
+        }else{
 
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password' => bcrypt($request->password)]
-        ));
+            $user = User::create(array_merge(
+                $validator->validated(),
+                ['password' => bcrypt($request->password)]
+            ));
+    
+            return $this->apiResponse(new UserResource($user), 'User successfully registered', 201);
+        }
 
-        return $this->apiResponse(new UserResource($user), 'User successfully registered', 201);
 
     }
 
 
-    public function index()
+    public function index($branchId)
     {
-        $users = UserResource::collection(User::get());
+        $branch = Branch::find($branchId);
+        if (!$branch) {
+            return $this->apiResponse(null ,'Branch not found', 404);
+        }
+        $users = $branch->users()->get();
         return $this->apiResponse($users, 'success', 200);
     }
 
@@ -122,12 +133,17 @@ class UserController extends Controller
 
         if ($user)
         {
-            $user->update(array_merge(
-                $validator->validated(),
-                ['password' => bcrypt($request->password)]
-            ));
+            if($request->query()){
+                return response()->json(null, 'Error');
+            }else{
+                $user->update(array_merge(
+                    $validator->validated(),
+                    ['password' => bcrypt($request->password)]
+                ));
+    
+                return $this->apiResponse(new UserResource($user), 'The user updated', 201);
+            }
 
-            return $this->apiResponse(new UserResource($user), 'The user updated', 201);
         }else{
 
             return $this->apiResponse(null, 'The user Not Found', 404);
@@ -152,15 +168,7 @@ class UserController extends Controller
         }
     }
 
-    
-
-    // protected function respondWithToken($token, $user)
-    // {
-    //     return response()->json([
-    //         'token' => $token,
-    //         'user' => $user
-    //     ]);
-    // }
+  
 
    
     
