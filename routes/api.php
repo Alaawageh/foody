@@ -38,20 +38,17 @@ Route::get('/show_branch/{id}', [BranchController::class, 'show']);
 //category apis
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/show_category/{id}', [CategoryController::class, 'show']);
-Route::post('/update_position', [CategoryController::class, 'updatePosition']);
 
 //ingrdient apis
-Route::get('/ingredients', [IngredientController::class, 'index']);
+Route::get('/ingredients/{productId}', [IngredientController::class, 'index']);
 Route::get('/show_ingredient/{id}', [IngredientController::class, 'show']);
 
 //product apis
-Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{categoryId}', [ProductController::class, 'index']);
 Route::get('/show_product/{id}', [ProductController::class, 'show']);
 
 
 //order apis
-Route::get('/orders', [OrderController::class, 'index']);
-Route::get('/show_order/{id}', [OrderController::class, 'show']);
 Route::post('/store_order', [OrderController::class, 'store']);
 Route::put('/update_order/{id}', [OrderController::class, 'update']);
 Route::post('/delete_order/{id}', [OrderController::class, 'destroy']);
@@ -71,7 +68,7 @@ Route::get('/show_offer/{id}', [OfferController::class, 'show']);
 
 
 // feedback_Apis
-Route::get('/feedbacks', [FeedbackController::class, 'index']);
+Route::get('/feedbacks/{orderId}', [FeedbackController::class, 'index']);
 Route::get('/show_feedback/{id}', [FeedbackController::class, 'show']);
 Route::post('/store_feedback', [FeedbackController::class, 'store']);
 Route::post('/update_feedback/{id}', [FeedbackController::class, 'update']);
@@ -79,10 +76,7 @@ Route::post('/delete_feedback/{id}', [FeedbackController::class, 'destroy']);
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('logout', [UserController::class, 'logout']);  
-    
-    //resturant api 
-    Route::post('/update_resturant/{id}', [ResturantController::class, 'update'])->middleware('SuperAdmin');
-    Route::post('/delete_resturant/{id}', [ResturantController::class, 'delete'])->middleware('SuperAdmin');
+
 
 
     //Category_Apis
@@ -104,13 +98,15 @@ Route::group(['middleware' => 'auth:api'], function () {
     
   
     //Order_Apis
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/show_order/{id}', [OrderController::class, 'show']);
     Route::get('ready_order/{id}',[OrderController::class,'readyOrder']);//قدي اخد الاوردر وقت
     Route::get('peakTimes',[OrderController::class,'peakTimes']);//اوقات الذروة
     Route::get('/export-order-report', [OrderController::class, 'exportOrderReport']);
     Route::get('getStatus/{id}',[OrderController::class,'getStatus']);
-    Route::post('change_status/{id}',[OrderController::class,'changeStatus'])->middleware('kitchen');
+    Route::post('change_status/{id}',[OrderController::class,'changeStatus'])->middleware(['kitchen','SuperAdmin']);
     Route::get('CheckPaid/{id}',[OrderController::class,'CheckPaid']);
-    Route::post('ChangePaid/{id}',[OrderController::class,'ChangePaid'])->middleware('casher');
+    Route::post('ChangePaid/{id}',[OrderController::class,'ChangePaid'])->middleware(['casher','SuperAdmin']);
     Route::get('/mostRequestedProduct',[OrderController::class,'mostRequestedProduct']);//منتجات اكثر طلبا
     Route::get('/leastRequestedProduct',[OrderController::class,'leastRequestedProduct']);//منتجات اقل طلبا
 
@@ -123,7 +119,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 });
 Route::group(['middleware' =>  ['auth:api', 'SuperAdmin']], function () {
-    Route::get('users', [UserController::class, 'index']);
+
+    Route::post('/update_resturant/{id}', [ResturantController::class, 'update']);
+    Route::post('/delete_resturant/{id}', [ResturantController::class, 'delete']);
+    
+    Route::get('users/{branchId}', [UserController::class, 'index']);
     Route::post('add_user', [UserController::class, 'store']);
     Route::get('show_user/{id}', [UserController::class, 'show']);
     Route::post('update_user/{id}', [UserController::class, 'update']);
