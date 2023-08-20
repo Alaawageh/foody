@@ -19,6 +19,7 @@ class ResturantResource extends JsonResource
             'id'=>$this->id,
             'resturant name'=>$this->resturant_name,
             'email'=>$this->email,
+            'password'=>$this->password,
             'phone' => $this->phone,
             'address'=>$this->address
         ];
