@@ -93,7 +93,7 @@ class RatingController extends Controller
         ->join('ratings', 'products.id', '=', 'ratings.product_id')
         ->select('products.name', DB::raw('AVG(ratings.value) as average_rating'))
         ->groupBy('products.name')
-        ->orderByDesc('average_rating')
+        ->orderBy('average_rating','DESC')
         ->limit('5')
         ->get();
 

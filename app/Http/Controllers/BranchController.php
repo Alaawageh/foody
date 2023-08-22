@@ -39,7 +39,7 @@ class BranchController extends Controller
             'about' => 'nullable|regex:/(^[A-Za-z ]+$)+/|min:0|max:2500',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'address' => 'nullable|regex:/(^[A-Za-z ]+$)+/|min:0|max:2500',
-            'taxRate' => 'required|regex:/(^[0-9 ]+%)+/',
+            'taxRate' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -76,7 +76,7 @@ class BranchController extends Controller
             'about' => 'nullable|regex:/(^[A-Za-z ]+$)+/|min:0|max:2500',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'address' => 'nullable|regex:/(^[A-Za-z ]+$)+/|min:0|max:2500',
-            'taxRate' => 'regex:/(^[0-9 ]+%)+/',
+            'taxRate' => 'nullable',
         ]);
 
         if ($validator->fails()) {

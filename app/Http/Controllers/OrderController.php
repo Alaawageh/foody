@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewOrder;
+use App\Events\OrderNotification;
 use App\Exports\OrdersExport;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -21,11 +23,11 @@ use Maatwebsite\Excel\Facades\Excel;
 class OrderController extends Controller
 {
     use ApiResponseTrait;
-
-
+ 
+    
     public function index()
     {
-        $orders = OrderResource::collection(Order::with('products.ingredients')->get());
+        $orders = OrderResource::collection(Order::get());
         return $this->apiResponse($orders,'success',200);
     }
 
@@ -109,6 +111,7 @@ class OrderController extends Controller
         $order->save();
         if ($order)
         {
+            event(new NewOrder($order));
             return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order Save', 201);
         }else{
             return $this->apiResponse(null, 'The order Not Save', 400);
@@ -267,7 +270,7 @@ class OrderController extends Controller
           
             return $this->apiResponse($order->status, 'This order '.$order->status, 201);
         }else{
-             return $this->apiResponse(null, 'Not Found', 400);
+             return $this->apiResponse(null, 'The Order Not Found', 404);
             
             }
     } 
