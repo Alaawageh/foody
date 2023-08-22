@@ -34,7 +34,7 @@ class NewOrder implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'order' => new OrderResource($this->order->load(['products.ingredients']))
+            'order' => new OrderResource($this->order->load(['products']))
         ];
     }
 

@@ -104,7 +104,9 @@ class OrderController extends Controller
           
         }
         
-        $orderTaxRate = $order->branch->taxRate;//0.15
+        $orderTax = intval($order->branch->taxRate);//0.15
+        
+        $orderTaxRate = $orderTax / 100;
         
         $order->total_price = $totalPrice + ($totalPrice * $orderTaxRate);
         
@@ -186,12 +188,16 @@ class OrderController extends Controller
                     }
                 }
             }
-            $orderTaxRate = $order->branch->taxRate;//0.15
+            $orderTax = intval($order->branch->taxRate);//0.15
+        
+            $orderTaxRate = $orderTax / 100;
         
             $order->total_price = $totalPrice + ($totalPrice * $orderTaxRate);
             $order->save();
 
-            return $this->apiResponse(new OrderResource($order), 'The order updated successfully', 200);
+            event(new NewOrder($order));
+
+            return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order updated successfully', 200);
         }
     }
 

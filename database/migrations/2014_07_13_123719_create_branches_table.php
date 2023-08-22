@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('about')->nullable();
             $table->string('image')->nullable();
             $table->string('address')->nullable();
-            $table->string('taxRate')->default('0.15');
+            $table->string('taxRate')->default('15%');
             $table->timestamps();
         });
     }
