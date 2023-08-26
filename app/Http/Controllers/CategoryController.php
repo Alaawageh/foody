@@ -50,7 +50,7 @@ class CategoryController extends Controller
         $category->name = $request->name;
         if($request->position){
             $category->position = $request->position;
-            Category::where('position', '>=',  $request->position)->increment('position');
+            Category::where('position', '=',  $request->position)->increment('position');
         }
         if($request->hasFile('image')){
             $image = $request->file('image');
@@ -92,7 +92,7 @@ class CategoryController extends Controller
             $category->name = $request->name;
             if($request->position){
                 $category->position = $request->position;
-                Category::where('position', '>=',  $request->position)->increment('position');
+                Category::where('position', '=',  $request->position)->increment('position');
             }
            
             if($request->hasFile('image')){

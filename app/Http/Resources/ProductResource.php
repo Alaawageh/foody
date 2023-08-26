@@ -23,6 +23,7 @@ class ProductResource extends JsonResource
             'ingredients'=>$this->ingredients,
             'estimated_time'=>$this->estimated_time,
             'status'=> $this->status,
+            'position'=>$this->position,
             'category_id'=>$this->category_id,
             'branch_id'=>$this->branch_id,
         ];

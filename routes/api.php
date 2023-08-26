@@ -53,10 +53,9 @@ Route::get('/offers', [OfferController::class, 'index']);
 Route::get('/show_offer/{id}', [OfferController::class, 'show']);
 
 //order apis
-
-Route::post('/store_order', [OrderController::class, 'store']);
-Route::put('/update_order/{id}', [OrderController::class, 'update']);
-Route::post('/delete_order/{id}', [OrderController::class, 'destroy']);
+Route::post('/cart/add', [OrderController::class, 'store']);
+Route::put('/cart/update/{id}', [OrderController::class, 'update']);
+Route::post('/cart/delete/{id}', [OrderController::class, 'destroy']);
 
 //Rating apis
 Route::get('/mostRatedProduct', [RatingController::class, 'mostRatedProduct']);//منتج اكثر تقييم
@@ -68,8 +67,6 @@ Route::post('/store_rating', [RatingController::class, 'store']);
 Route::post('/delete_rating/{id}', [RatingController::class, 'destroy']);
 
 
-
-
 // feedback_Apis
 Route::get('/feedbacks/{orderId}', [FeedbackController::class, 'index']);
 Route::get('/show_feedback/{id}', [FeedbackController::class, 'show']);
@@ -77,15 +74,24 @@ Route::post('/store_feedback', [FeedbackController::class, 'store']);
 Route::post('/update_feedback/{id}', [FeedbackController::class, 'update']);
 Route::post('/delete_feedback/{id}', [FeedbackController::class, 'destroy']);
 
-Route::group(['middleware' => 'auth:api'], function () {
-    Route::post('logout', [UserController::class, 'logout']);
+Route::group(['middleware' => 'auth:api' , 'kitchen'], function() {
+    Route::get('getStatus/{id}',[OrderController::class,'getStatus']);
+    Route::post('change_status/{id}',[OrderController::class,'changeStatus']);
+});
 
+Route::group(['middleware' => 'auth:api' , 'casher'],function(){
+    Route::get('CheckPaid/{id}',[OrderController::class,'CheckPaid']);
+    Route::post('ChangePaid/{id}',[OrderController::class,'ChangePaid']);
+});
+
+Route::group(['middleware' => 'auth:api' , 'admin'], function () {
+
+    Route::post('logout', [UserController::class, 'logout']);
 
     //Category_Apis
     Route::post('/store_category', [CategoryController::class, 'store']);
     Route::post('/update_category/{id}', [CategoryController::class, 'update']);
     Route::post('/delete_category/{id}', [CategoryController::class, 'destroy']);
-
 
     //Ingredient_Apis
     Route::post('/store_ingredient', [IngredientController::class, 'store']);
@@ -105,10 +111,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('ready_order/{id}',[OrderController::class,'readyOrder']);//قدي اخد الاوردر وقت
     Route::get('peakTimes',[OrderController::class,'peakTimes']);//اوقات الذروة
     Route::get('/export-order-report', [OrderController::class, 'exportOrderReport']);
-    Route::get('getStatus/{id}',[OrderController::class,'getStatus']);
-    Route::post('change_status/{id}',[OrderController::class,'changeStatus'])->middleware('kitchen');
-    Route::get('CheckPaid/{id}',[OrderController::class,'CheckPaid']);
-    Route::post('ChangePaid/{id}',[OrderController::class,'ChangePaid'])->middleware('casher');
     Route::get('/mostRequestedProduct',[OrderController::class,'mostRequestedProduct']);//منتجات اكثر طلبا
     Route::get('/leastRequestedProduct',[OrderController::class,'leastRequestedProduct']);//منتجات اقل طلبا
 
