@@ -84,7 +84,7 @@ Route::group(['middleware' => 'auth:api' , 'casher'],function(){
     Route::post('ChangePaid/{id}',[OrderController::class,'ChangePaid']);
 });
 
-Route::group(['middleware' => 'auth:api' , 'admin'], function () {
+Route::group(['middleware' => 'auth:api' , 'admin' , 'SuperAdmin'], function () {
 
     Route::post('logout', [UserController::class, 'logout']);
 

@@ -40,7 +40,7 @@ class UserController extends Controller
             $credentials = $request->only(['email', 'password']);
 
             $token = Auth::guard('api')->attempt($credentials);
-
+            
 
             if (!$token)
             {

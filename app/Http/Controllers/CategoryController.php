@@ -45,29 +45,69 @@ class CategoryController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse(null,$validator->errors(),400);
         }
+        $name = $request->name;
+        $position = $request->position;
+        $categories = Category::orderBy('position')->get();
 
-        $category = new Category();
-        $category->name = $request->name;
-        if($request->position){
-            $category->position = $request->position;
-            Category::where('position', '=',  $request->position)->increment('position');
-        }
-        if($request->hasFile('image')){
-            $image = $request->file('image');
-            $filename = $image->getClientOriginalName();
-            $image->move(public_path('/images/category'),$filename);
-            $category->image = $filename;
-        }
-        $category->save();
+        // check if there are any categories
+        if ($categories->isEmpty()) {
+            // save new category with position 1
+            $category = new Category;
+            $category->name = $name;
+            $category->position = 1;
+            if($request->hasFile('image')){
+               $image = $request->file('image');
+               $filename = $image->getClientOriginalName();
+               $image->move(public_path('/images/category'),$filename);
+               $category->image = $filename;
+           }
+            $category->save();
+        } else {
+            // get highest existing position
+            $highest_position = $categories->last()->position;
         
+            // check if requested position is greater than highest existing position
+            if ($position > $highest_position) {
+                // save new category with requested position
+                $category = new Category;
+                $category->name = $name;
+                $category->position = $position;
+                if($request->hasFile('image')){
+                   $image = $request->file('image');
+                   $filename = $image->getClientOriginalName();
+                   $image->move(public_path('/images/category'),$filename);
+                   $category->image = $filename;
+               }
+                $category->save();
+            } else {
+                // adjust positions of existing categories and add new category with adjusted position
+                foreach ($categories as $cat) {
+                    if ($cat->position >= $position) {
+                        $cat->position++;
+                        $cat->save();
+                    }
+                }
+                $category = new Category;
+                $category->name = $name;
+                $category->position = $position;
+                if($request->hasFile('image')){
+                    $image = $request->file('image');
+                    $filename = $image->getClientOriginalName();
+                    $image->move(public_path('/images/category'),$filename);
+                    $category->image = $filename;
+                }
+                $category->save();
+            }
+        }
+        
+        // rest of the code remains the same
         if($category){
-
             return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);
-
-        }else{
-
+        } else {
             return $this->apiResponse(null,'Data Not Save',400);
         }
+        
+        
     }
 
     
@@ -90,10 +130,26 @@ class CategoryController extends Controller
         if($category){
 
             $category->name = $request->name;
-            if($request->position){
-                $category->position = $request->position;
-                Category::where('position', '=',  $request->position)->increment('position');
+            if (!empty($position) && $position != $category->position) {
+                $categories = Category::orderBy('position')->get();
+        
+                // check if requested position is greater than highest existing position
+                if ($position > $categories->last()->position) {
+                    $category->position = $position;
+                } else {
+                    // adjust positions of existing categories and update position of current category
+                    foreach ($categories as $cat) {
+                        if ($cat->id != $id && $cat->position >= $position) {
+                            $cat->position++;
+                            $cat->save();
+                        }
+                    }
+                    $category->position = $position;
+                }
             }
+        
+            // save changes to database
+            $category->save();
            
             if($request->hasFile('image')){
                  File::delete(public_path('/images/category/'.$category->image));
