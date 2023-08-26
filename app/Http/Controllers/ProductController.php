@@ -15,7 +15,11 @@ class ProductController extends Controller
 {
     use ApiResponseTrait;
    
-    
+    public function AllProducts(){
+        $products = ProductResource::collection(Product::get());
+
+        return $this->apiResponse($products,'success',200);  
+    }
     public function index($categoryId)
     {
         $category = Category::find($categoryId);

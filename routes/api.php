@@ -45,6 +45,7 @@ Route::get('/show_ingredient/{id}', [IngredientController::class, 'show']);
 
 //product apis
 Route::get('/products/{categoryId}', [ProductController::class, 'index']);
+Route::get('/products', [ProductController::class, 'AllProducts']);
 Route::get('/show_product/{id}', [ProductController::class, 'show']);
 
 //offer apis
