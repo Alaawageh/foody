@@ -17,7 +17,7 @@ class Kitchen
      */
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->user()->type == "Kitchen") {
+        if (auth()->user()->type == "Kitchen" || auth()->user()->type == 'Super Admin') {
             return $next($request);
         } else {
             return response()->json(['error' => 'FORBIDDEN'],Response::HTTP_FORBIDDEN) ;

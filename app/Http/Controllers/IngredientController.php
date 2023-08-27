@@ -13,6 +13,13 @@ class IngredientController extends Controller
 {
     use ApiResponseTrait;
     
+    public function GetAll()
+    {
+        $ingredients = IngredientResource::collection(Ingredient::get());
+
+        return $this->apiResponse($ingredients,'success',200);
+    }
+    
     public function index($productId)
     {
         $product = Product::find($productId);

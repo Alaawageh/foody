@@ -17,7 +17,7 @@ class Casher
      */
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->user()->type == "Casher") {
+        if (auth()->user()->type == "Casher" || auth()->user()->type == 'Super Admin') {
             return $next($request);
         } else {
             return response()->json(['error' => 'FORBIDDEN'],Response::HTTP_FORBIDDEN) ;

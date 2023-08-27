@@ -38,7 +38,7 @@ class CategoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255|regex:/(^[A-Za-z ]+$)+/',
-            'position' => 'nullable|integer|min:0',
+            'position' => 'nullable|integer',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
         ]);
 
@@ -50,11 +50,12 @@ class CategoryController extends Controller
         $categories = Category::orderBy('position')->get();
 
         // check if there are any categories
-        if ($categories->isEmpty()) {
+        if ($categories->isEmpty())
+        {
             // save new category with position 1
             $category = new Category;
             $category->name = $name;
-            $category->position = 1;
+            $category->position = null;
             if($request->hasFile('image')){
                $image = $request->file('image');
                $filename = $image->getClientOriginalName();
@@ -71,7 +72,7 @@ class CategoryController extends Controller
                 // save new category with requested position
                 $category = new Category;
                 $category->name = $name;
-                $category->position = $position;
+                $category->position = $highest_position+1;
                 if($request->hasFile('image')){
                    $image = $request->file('image');
                    $filename = $image->getClientOriginalName();
@@ -82,7 +83,7 @@ class CategoryController extends Controller
             } else {
                 // adjust positions of existing categories and add new category with adjusted position
                 foreach ($categories as $cat) {
-                    if ($cat->position >= $position) {
+                    if ($cat->position >= $position && $position !== null) {
                         $cat->position++;
                         $cat->save();
                     }
@@ -126,20 +127,21 @@ class CategoryController extends Controller
         }
 
         $category=Category::find($id);
-       
+        $position = $request->position;
         if($category){
 
             $category->name = $request->name;
-            if (!empty($position) && $position != $category->position) {
+            if ($position != $category->position) {
                 $categories = Category::orderBy('position')->get();
-        
+                $highest_position = $categories->last()->position;
+
                 // check if requested position is greater than highest existing position
-                if ($position > $categories->last()->position) {
-                    $category->position = $position;
+                if ($position > $highest_position ) {
+                    $category->position = $highest_position+1;
                 } else {
                     // adjust positions of existing categories and update position of current category
                     foreach ($categories as $cat) {
-                        if ($cat->id != $id && $cat->position >= $position) {
+                        if ($cat->id != $id && $cat->position >= $position && $position !== null) {
                             $cat->position++;
                             $cat->save();
                         }

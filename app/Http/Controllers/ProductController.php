@@ -15,11 +15,14 @@ class ProductController extends Controller
 {
     use ApiResponseTrait;
    
-    public function AllProducts(){
-        $products = ProductResource::collection(Product::get());
+    public function AllProducts()
+    {
+        $pro = Product::orderByRaw('position IS NULL ASC, position ASC')->get();
+        $products = ProductResource::collection($pro);
 
         return $this->apiResponse($products,'success',200);  
     }
+    
     public function index($categoryId)
     {
         $category = Category::find($categoryId);
@@ -55,6 +58,7 @@ class ProductController extends Controller
             'image' => 'nullable|file||image|mimes:jpeg,jpg,png',
             'estimated_time'=>'nullable|date_format:H:i:s',
             'status' => 'in:0,1',
+            'position' => 'nullable|integer|min:0',
             'category_id' => 'integer|exists:categories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
@@ -63,25 +67,89 @@ class ProductController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse(null,$validator->errors(),400);
         }
-
-        $product = new Product();
-        $product->name = $request->name;
-        $product->price = $request->price;
-        $product->ingredients = $request->ingredients;
-        $product->estimated_time = $request->estimated_time;
-        $product->status = $request->status;
-        $product->category_id = $request->category_id;
-        $product->branch_id = $request->branch_id;
-
-        if($request->hasFile('image'))
+        $products = Product::where('category_id',$request->category_id)->orderBy('position')->get();
+        if ($products->isEmpty())
         {
-            $image = $request->file('image');
-            $filename = $image->getClientOriginalName();
-            $request->image->move(public_path('/images/product'),$filename);
-            $product->image = $filename;
-        }
-        $product->save();
+            // save new product with position 1
+            $product = new Product();
+            $product->name = $request->name;
+            $product->price = $request->price;
+            $product->ingredients = $request->ingredients;
+            $product->estimated_time = $request->estimated_time;
+            // $product->status = $request->status;
+            $product->position = null;
+            $product->category_id = $request->category_id;
+            $product->branch_id = $request->branch_id;
+            
+            if($request->hasFile('image'))
+            {
+                $image = $request->file('image');
+                $filename = $image->getClientOriginalName();
+                $request->image->move(public_path('/images/product'),$filename);
+                $product->image = $filename;
+            }
+            
+            $product->save();
 
+            
+            
+        }else{
+            // get highest existing position
+            $highest_position = $products->last()->position;
+            $position = $request->position;
+            // check if requested position is greater than highest existing position
+            if ($position > $highest_position)
+            {
+                // save new category with requested position
+                $product = new Product();
+                $product->name = $request->name;
+                $product->price = $request->price;
+                $product->ingredients = $request->ingredients;
+                $product->estimated_time = $request->estimated_time;
+                // $product->status = $request->status;
+                $product->category_id = $request->category_id;
+                $product->branch_id = $request->branch_id;
+                $product->position = $highest_position+1;
+                if($request->hasFile('image'))
+                {
+                    $image = $request->file('image');
+                    $filename = $image->getClientOriginalName();
+                    $request->image->move(public_path('/images/product'),$filename);
+                    $product->image = $filename;
+                }
+                $product->save();
+                
+            }else{
+                // adjust positions of existing categories and add new category with adjusted position
+                foreach ($products as $product) {
+                    if ($product->position >= $position && $position !== null) {
+                        $product->position++;
+                        $product->save();
+                    }
+                }
+                $product = new Product();
+                $product->name = $request->name;
+                $product->price = $request->price;
+                $product->ingredients = $request->ingredients;
+                $product->estimated_time = $request->estimated_time;
+                // $product->status = $request->status;
+                $product->category_id = $request->category_id;
+                $product->branch_id = $request->branch_id;
+                $product->position = $position;
+                if($request->hasFile('image'))
+                {
+                    $image = $request->file('image');
+                    $filename = $image->getClientOriginalName();
+                    $request->image->move(public_path('/images/product'),$filename);
+                    $product->image = $filename;
+                }
+                $product->save();
+    
+              
+            }
+        }
+        
+        
         $ingredientID = $request->ingredientID ?? [];
         $product->ingredients()->attach($ingredientID);
         
@@ -104,7 +172,8 @@ class ProductController extends Controller
             'ingredients' => 'string|min:3|max:2500',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'estimated_time'=>'nullable|date_format:H:i:s',
-            'status' => 'in:0,1',
+            // 'status' => 'in:0,1',
+            'position' => 'nullable|integer|min:0',
             'category_id' => 'integer|exists:categories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
@@ -114,17 +183,38 @@ class ProductController extends Controller
         }
 
 
-        $product=Product::find($id);
+        $product = Product::find($id);
+        $position = $request->position;
 
         if($product){
             $product->name = $request->name;
             $product->price = $request->price;
             $product->ingredients = $request->ingredients;
             $product->estimated_time = $request->estimated_time;
-            $product->status = $request->status;
+            // $product->status = $request->status;
             $product->category_id = $request->category_id;
             $product->branch_id = $request->branch_id;
+            $product->save();
+            if ($position != $product->position) {
 
+                $products = Product::where('category_id',$request->category_id)->orderBy('position')->get();
+                $highest_position = $products->last()->position;
+                
+                // check if requested position is greater than highest existing position
+                if ($position > $highest_position) {
+                    $product->position = $highest_position+1;
+                    $product->save();
+                } else {
+                    // adjust positions of existing categories and update position of current category
+                    foreach ($products as $pro) {
+                        if ($pro->id != $id && $pro->position >= $position && $position !== null) {
+                            $pro->position++;
+                            $pro->save();
+                        }
+                    }
+                    $product->position = $position;
+                }
+            }
             if($request->hasFile('image'))
             {
                 File::delete(public_path('/images/product/'.$product->image));

@@ -9,16 +9,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class admin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
     public function handle(Request $request, Closure $next)
     { 
-            if (auth()->user()->type == "admin") {
+            if (auth()->user()->type == "admin" || auth()->user()->type == 'Super Admin') {
                 // dd("yes i am admin");
                 return $next($request);
             } else {

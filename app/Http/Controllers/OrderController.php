@@ -49,7 +49,7 @@ class OrderController extends Controller
         $v = $request->validate([
             'table_num' => 'required',
             'time' => 'date_format:H:i:s',
-            'time_end' => 'date_format:H:i:s',
+            // 'time_end' => 'date_format:H:i:s',
             'branch_id'=> 'exists:branches,id'
         ]);
         $order = new Order();
@@ -134,7 +134,8 @@ class OrderController extends Controller
         {
             return $this->apiResponse(null, 'Order not found', 404);  
         }
-        if ($order)
+        
+        if ($order && $order->status == 'Befor_Preparing')
         {
             $order->table_num = $v['table_num'];
             $order->branch_id = $v['branch_id'];
@@ -198,6 +199,8 @@ class OrderController extends Controller
             event(new NewOrder($order));
 
             return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order updated successfully', 200);
+        }else{
+            return $this->apiResponse(null, 'It is not possible to modify your order. The order is in preparation ', 400); 
         }
     }
 
@@ -286,11 +289,19 @@ class OrderController extends Controller
 
         $order=Order::find($id);
 
-        if($order){
-            
+        if($order && $order->status = 'Preparing')
+        {
             $order->update([
                 'status' => 'Done',
                 'time_end' => Carbon::now()->format('H:i:s'),
+            ]);
+            $order->save();
+
+            return $this->apiResponse($order, 'Changes saved successfully', 201);
+
+        }elseif ($order && $order->status = 'Befor_Preparing'){
+            $order->update([
+                'status' => 'Preparing',
             ]);
             $order->save();
             return $this->apiResponse($order, 'Changes saved successfully', 201);
@@ -318,10 +329,10 @@ class OrderController extends Controller
         $order = Order::find($id);
 
         if(!$order){
-            return $this->apiResponse(null, 'Not Found', 404);
+            return $this->apiResponse(null, 'Order Not Found', 404);
         }
         
-        if($order->is_paid == '0'){
+        if($order->is_paid == '0' && $order->status == 'Done'){
             $order->update([
                 'is_paid' => '1',
             ]);
@@ -330,7 +341,7 @@ class OrderController extends Controller
             return $this->apiResponse($order->is_paid, ' Payment status changed successfully', 201);
             
         }else{
-            return $this->apiResponse(null, 'Changes are not saved', 400);
+            return $this->apiResponse(null, 'Changes are not saved Or Order Not Done yet', 400);
         }
         
     }

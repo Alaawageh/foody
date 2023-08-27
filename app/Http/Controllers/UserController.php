@@ -94,7 +94,14 @@ class UserController extends Controller
     }
 
 
-    public function index($branchId)
+    public function index()
+    {
+        $users = UserResource::collection(User::get());
+
+        return $this->apiResponse($users,'success',200);
+    }
+
+    public function GetUserByBranch($branchId)
     {
         $branch = Branch::find($branchId);
         if (!$branch) {
