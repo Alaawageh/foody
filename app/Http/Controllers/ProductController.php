@@ -77,7 +77,7 @@ class ProductController extends Controller
             $product->ingredients = $request->ingredients;
             $product->estimated_time = $request->estimated_time;
             // $product->status = $request->status;
-            $product->position = null;
+            $product->position = $request->position;
             $product->category_id = $request->category_id;
             $product->branch_id = $request->branch_id;
             

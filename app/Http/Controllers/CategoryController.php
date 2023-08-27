@@ -55,7 +55,7 @@ class CategoryController extends Controller
             // save new category with position 1
             $category = new Category;
             $category->name = $name;
-            $category->position = null;
+            $category->position = $position;
             if($request->hasFile('image')){
                $image = $request->file('image');
                $filename = $image->getClientOriginalName();
