@@ -145,6 +145,7 @@ class CategoryController extends Controller
                             $cat->position++;
                             $cat->save();
                         }
+                        
                     }
                     $category->position = $position;
                 }

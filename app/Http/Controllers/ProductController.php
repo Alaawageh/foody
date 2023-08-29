@@ -59,6 +59,7 @@ class ProductController extends Controller
             'estimated_time'=>'nullable|date_format:H:i:s',
             'status' => 'in:0,1',
             'position' => 'nullable|integer|min:0',
+            'notes' => 'nullable',
             'category_id' => 'integer|exists:categories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
@@ -76,8 +77,8 @@ class ProductController extends Controller
             $product->price = $request->price;
             $product->ingredients = $request->ingredients;
             $product->estimated_time = $request->estimated_time;
-            // $product->status = $request->status;
             $product->position = $request->position;
+            $product->notes = $request->notes;
             $product->category_id = $request->category_id;
             $product->branch_id = $request->branch_id;
             
@@ -106,7 +107,7 @@ class ProductController extends Controller
                 $product->price = $request->price;
                 $product->ingredients = $request->ingredients;
                 $product->estimated_time = $request->estimated_time;
-                // $product->status = $request->status;
+                $product->notes = $request->notes;
                 $product->category_id = $request->category_id;
                 $product->branch_id = $request->branch_id;
                 $product->position = $highest_position+1;
@@ -132,7 +133,7 @@ class ProductController extends Controller
                 $product->price = $request->price;
                 $product->ingredients = $request->ingredients;
                 $product->estimated_time = $request->estimated_time;
-                // $product->status = $request->status;
+                $product->notes = $request->notes;
                 $product->category_id = $request->category_id;
                 $product->branch_id = $request->branch_id;
                 $product->position = $position;
@@ -172,8 +173,8 @@ class ProductController extends Controller
             'ingredients' => 'string|min:3|max:2500',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'estimated_time'=>'nullable|date_format:H:i:s',
-            // 'status' => 'in:0,1',
             'position' => 'nullable|integer|min:0',
+            'notes' => 'nullable',
             'category_id' => 'integer|exists:categories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
@@ -191,7 +192,7 @@ class ProductController extends Controller
             $product->price = $request->price;
             $product->ingredients = $request->ingredients;
             $product->estimated_time = $request->estimated_time;
-            // $product->status = $request->status;
+            $product->notes = $request->notes;
             $product->category_id = $request->category_id;
             $product->branch_id = $request->branch_id;
             $product->save();
@@ -267,6 +268,79 @@ class ProductController extends Controller
         $product->save();
 
         return $this->apiResponse($product->status,'Status change successfully.',200);
+    }
+
+    public function TotalSalesByMonth()
+    {
+        $totalPriceByMonth = DB::table('orders')
+        ->join('orders_products', 'orders.id', '=', 'orders_products.order_id')
+        ->join('products', 'orders_products.product_id', '=', 'products.id')
+        ->selectRaw('MONTH(orders.created_at) as month, SUM(orders_products.quantity * products.price) as total')
+        ->groupBy('month', 'products.name')
+        ->get();
+       
+        return $this->apiResponse($totalPriceByMonth,'success',200);
+
+    }
+
+    public function maxSales()
+    {
+        $maxPriceByMonth = DB::table('orders')
+        ->join('orders_products', 'orders.id', '=','orders_products.order_id')
+        ->join('products', 'orders_products.product_id', '=', 'products.id')
+        ->selectRaw('MONTH(orders.created_at) as month, MAX(orders_products.quantity * products.price) as total')
+        ->groupBy('month', 'products.name')
+        ->get();
+        
+        return $this->apiResponse($maxPriceByMonth,'success',200);
+
+    }
+
+    public function avgSalesByYear()
+    {
+        $avgSalesByYear = DB::table('orders') 
+                        ->join('orders_products', 'orders.id', '=', 'orders_products.order_id')
+                        ->join('products', 'orders_products.product_id', '=', 'products.id')
+                        ->selectRaw('YEAR(orders.created_at) as year, AVG(orders_products.quantity * products.price) as average_sales')
+                        ->groupBy('year')
+                        ->get();
+        return $this->apiResponse($avgSalesByYear,'success',200);
+
+    }
+
+    public function mostRequestedProduct()
+    {
+        $mostRequestedProduct = DB::table('products')
+            ->leftJoin('orders_products', 'products.id', '=', 'orders_products.product_id')->select('products.name')
+            ->groupBy('products.name')
+            ->orderByRaw('COUNT(product_id) DESC')
+            ->limit(5)
+            ->get();
+             
+        if ($mostRequestedProduct) {
+           
+            return $this->apiResponse($mostRequestedProduct,'success',200);
+           
+                
+        } else {
+             return $this->apiResponse(null,'No product has been requested yet',404);
+        }
+    }
+
+    public function leastRequestedProduct()
+    {
+        $leastRequestedProduct = DB::table('products')
+        ->leftJoin('orders_products', 'products.id', '=', 'orders_products.product_id')->select('products.name')
+        ->groupBy('products.name')
+        ->orderByRaw('COUNT(product_id)')
+        ->limit(5)
+        ->get();
+
+        if ($leastRequestedProduct) {
+            return $this->apiResponse($leastRequestedProduct,'success',200);
+        } else {
+            return $this->apiResponse(null,'No product has been requested yet',404);
+        }
     }
 
 

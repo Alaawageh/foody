@@ -26,6 +26,7 @@ class ProductResource extends JsonResource
             'status'=> $this->status,
             'category_id'=>$this->category_id,
             'branch_id'=>$this->branch_id,
+            'notes'=>$this->notes,
         ];
     }
 }

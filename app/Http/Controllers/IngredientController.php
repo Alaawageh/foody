@@ -27,9 +27,15 @@ class IngredientController extends Controller
         if (!$product) {
             return $this->apiResponse(null ,'Product not found', 404);
         }
-
         $ingredients = $product->ingredients()->get();
-        return $this->apiResponse($ingredients,'success',200);
+
+        $ingredientResources = [];
+    
+        foreach ($ingredients as $ingredient) {
+            $ingredientResources[] = new IngredientResource($ingredient);
+        }
+        return $this->apiResponse($ingredientResources, 'success', 200);
+        
     }
 
     public function show($id){

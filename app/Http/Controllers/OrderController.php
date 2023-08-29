@@ -8,13 +8,10 @@ use App\Exports\OrdersExport;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Http\Resources\OrderResource;
-use App\Models\Branch;
 use App\Models\Ingredient;
 use App\Models\OrderIngredient;
 use App\Models\OrderProduct;
 use App\Models\Product;
-use App\Models\Resturant;
-use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -27,17 +24,17 @@ class OrderController extends Controller
     
     public function index()
     {
-        $orders = OrderResource::collection(Order::get());
+        $orders = Order::with('products.ingredients', 'products')->get();
         return $this->apiResponse($orders,'success',200);
     }
 
     public function show($id)
     {
 
-        $order = Order::with('products.ingredients')->find($id);
+        $order = Order::with('products.ingredients', 'products')->find($id);
 
         if($order){
-            return $this->apiResponse(new OrderResource($order),'ok',200);
+            return $this->apiResponse($order,'success',200);
         }else{
             return $this->apiResponse(null,'The order Not Found',404);
         }
@@ -49,31 +46,39 @@ class OrderController extends Controller
         $v = $request->validate([
             'table_num' => 'required',
             'time' => 'date_format:H:i:s',
-            // 'time_end' => 'date_format:H:i:s',
-            'branch_id'=> 'exists:branches,id'
+            'branch_id'=> 'exists:branches,id',
+            'product_id' => 'exists:products',
+            'ingredient_id' => 'exists:ingredients',
         ]);
         $order = new Order();
         $order->table_num = $v['table_num'];
         $order->branch_id = $v['branch_id'];
         $order->time = Carbon::now()->format('H:i:s');
-        $order->save();
+        // $order->save();
 
         $totalPrice = 0;
         
         $products = $request->products;
         if($products){
             foreach($products as $productData){
+
+                $product = Product::find($productData['product_id']);
+
+                if($product){
+                    $productPrice = $product->price;
+                    $order->save();
+                }else{
+                    return $this->apiResponse(null,'The product Not Found',404);
+                }
+                
                 $orderProduct = new OrderProduct();
                 $orderProduct->order_id = $order->id;
                 $orderProduct->product_id = $productData['product_id'];
                 $orderProduct->quantity = $productData['quantity'];
                 $orderProduct->save();
 
-                $product = Product::find($productData['product_id']);
                 
-                if($product){
-                    $productPrice = $product->price;
-                }
+                
                  // Calculate the product subtotal
                  $productSubtotal = $productPrice * $productData['quantity'];
                 
@@ -82,16 +87,21 @@ class OrderController extends Controller
 
                 if(isset($productData['ingredients'])){
                     foreach($productData['ingredients'] as $ingredientData){
+
+                        $ingredient = Ingredient::find($ingredientData['ingredient_id']);
+                        if($ingredient){
+                            $ingredientPrice = $ingredient->price_by_piece;
+                        }else{
+                            return $this->apiResponse(null,'The ingredient Not Found',404);
+                        }
+
                         $orderIngredient = new OrderIngredient();
                         $orderIngredient->order_id = $order->id;
                         $orderIngredient->ingredient_id = $ingredientData['ingredient_id'];
                         $orderIngredient->quantity = $ingredientData['quantity'];
                         $orderIngredient->save();
 
-                        $ingredient = Ingredient::find($ingredientData['ingredient_id']);
-                        if($ingredient){
-                            $ingredientPrice = $ingredient->price_by_piece;
-                        }
+                       
 
                         // Calculate the ingredient subtotal
                         $ingredientSubtotal = $ingredientPrice * $ingredientData['quantity'];
@@ -103,7 +113,7 @@ class OrderController extends Controller
             }
           
         }
-        
+        // $order->save();
         $orderTax = intval($order->branch->taxRate);//0.15
         
         $orderTaxRate = $orderTax / 100;
@@ -125,7 +135,9 @@ class OrderController extends Controller
             'time' => 'date_format:H:i:s',
             'time_end' => 'date_format:H:i:s',
             'table_num' => 'required',
-            'branch_id'=> 'exists:branches,id'
+            'branch_id'=> 'exists:branches,id',
+            'product_id' => 'exists:products',
+            'ingredient_id' => 'exists:ingredients',
         ]);
 
         $order = Order::find($id);
@@ -271,17 +283,24 @@ class OrderController extends Controller
 
     }
 
-    public function getStatus($id)
-    {
-        $order=Order::find($id);
+    // public function getStatus($id)
+    // {
+    //     $order=Order::find($id);
 
-        if($order){
+    //     if($order){
           
-            return $this->apiResponse($order->status, 'This order '.$order->status, 201);
-        }else{
-             return $this->apiResponse(null, 'The Order Not Found', 404);
+    //         return $this->apiResponse($order, 'This order '.$order->status, 201);
+    //     }else{
+    //          return $this->apiResponse(null, 'The Order Not Found', 404);
             
-            }
+    //         }
+    // }
+    public function GetStatusOrder($table_num)
+    {
+        $order = Order::where('table_num',$table_num)->where('status','Befor_Preparing')->latest()->first();
+
+        return $this->apiResponse($order->load(['products.ingredients','products']),'success',200);
+        
     } 
 
     public function changeStatus($id)
@@ -296,6 +315,7 @@ class OrderController extends Controller
                 'time_end' => Carbon::now()->format('H:i:s'),
             ]);
             $order->save();
+            // event(new NewOrder($order));
 
             return $this->apiResponse($order, 'Changes saved successfully', 201);
 
@@ -348,7 +368,7 @@ class OrderController extends Controller
 
     public function mostRequestedProduct()
     {
-        $mostRequestedProduct =DB::table('products')
+        $mostRequestedProduct = DB::table('products')
             ->leftJoin('orders_products', 'products.id', '=', 'orders_products.product_id')->select('products.name')
             ->groupBy('products.name')
             ->orderByRaw('COUNT(product_id) DESC')
@@ -381,6 +401,55 @@ class OrderController extends Controller
         }
     }
 
+    public function TotalOrderByMonth(){
+        $ordersByMonth = Order::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+        ->groupBy('month')
+        ->get();
+    
+        return $this->apiResponse($ordersByMonth,'success',200);
+
+    }
+
+    public function mostRatedorder()
+    {
+        $mostRatedProduct = DB::table('orders')
+        ->join('feedbacks', 'orders.id', '=', 'feedbacks.order_id')
+        ->select('orders.id', DB::raw('COUNT(feedbacks.id) as total_feedbacks'))
+        ->groupBy('orders.id')
+        ->orderBy('total_feedbacks','DESC')
+        ->limit('5')
+        ->get();
+
+        if($mostRatedProduct)
+        {
+            return $this->apiResponse($mostRatedProduct,'The most rated product',200);
+
+        }else{
+            return $this->apiResponse(null,'No product has been Rated yet',404);
+        }
+    }
+
+    
+    public function ordersByDay(){
+        $ordersByDay = DB::table('orders')
+                ->selectRaw('DATE(created_at) as day, COUNT(*) as count')
+                ->groupBy('day')
+                ->get();
+        return $this->apiResponse($ordersByDay,'The number of orders by day',200);
+
+    }
+    public function mostFeedbackedOrder()
+    {
+        $mostFeedbackedOrder = DB::table('orders')
+                       ->select('orders.id', DB::raw('COUNT(feedbacks.id) as feedback_count'))
+                       ->leftJoin('feedbacks', 'orders.id', '=', 'feedbacks.order_id')
+                       ->groupBy('orders.id')
+                       ->orderByDesc('feedback_count')
+                       ->limit(1)
+                       ->first();
+        return $this->apiResponse($mostFeedbackedOrder,'success',200);
+
+    }
     
    
 }

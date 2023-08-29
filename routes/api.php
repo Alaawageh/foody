@@ -31,6 +31,7 @@ Route::post('/store_resturant', [ResturantController::class, 'store']);
 
 Route::post('login', [UserController::class, 'login']);
 
+
 // Api's For Client
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/show_category/{id}', [CategoryController::class, 'show']);
@@ -47,6 +48,7 @@ Route::get('/offers', [OfferController::class, 'index']);
 Route::get('/show_offer/{id}', [OfferController::class, 'show']);
 
 Route::post('/cart/add', [OrderController::class, 'store']);
+Route::get('GetStatusOrder/{table_num}',[OrderController::class,'GetStatusOrder']);
 Route::put('/cart/update/{id}', [OrderController::class, 'update']);
 
 Route::post('/store_rating', [RatingController::class, 'store']);
@@ -92,16 +94,22 @@ Route::group(['middleware' => ['auth:api' ,'admin']], function () {
     Route::post('/update_product/{id}', [ProductController::class, 'update']);
     Route::post('/delete_product/{id}', [ProductController::class, 'destroy']);
     Route::get('/edit_status/{id}', [ProductController::class, 'edit']);// on off
-    
+    Route::get('/product/totalSales',[ProductController::class,'TotalSalesByMonth']);
+    Route::get('/product/maxSales',[ProductController::class,'maxSales']);
+    Route::get('/product/avgSales',[ProductController::class,'avgSalesByYear']);
+    Route::get('/product/mostRequestedProduct',[ProductController::class,'mostRequestedProduct']);
+    Route::get('/product/leastRequestedProduct',[ProductController::class,'leastRequestedProduct']);
   
     //Order_Apis
-    
     Route::post('/delete_order/{id}', [OrderController::class, 'destroy']);
-    Route::get('ready_order/{id}',[OrderController::class,'readyOrder']);//قدي اخد الاوردر وقت
-    Route::get('peakTimes',[OrderController::class,'peakTimes']);//اوقات الذروة
+    Route::get('/ready_order/{id}',[OrderController::class,'readyOrder']);//قدي اخد الاوردر وقت
+    Route::get('/peakTimes',[OrderController::class,'peakTimes']);//اوقات الذروة
     Route::get('/export-order-report', [OrderController::class, 'exportOrderReport']);//تصدير اكسل 
-    Route::get('/mostRequestedProduct',[OrderController::class,'mostRequestedProduct']);//منتجات اكثر طلبا
-    Route::get('/leastRequestedProduct',[OrderController::class,'leastRequestedProduct']);//منتجات اقل طلبا
+
+    Route::get('/order/totalOrders',[OrderController::class,'TotalOrderByMonth']);//اجمالي الاوردرات لكل شهر
+    Route::get('/order/Ratedorder',[OrderController::class,'mostRatedorder']);//الاوردرات الاكثر تقييما
+    Route::get('/order/orderByDay',[OrderController::class,'ordersByDay']);
+    Route::get('/order/mostFeedbackedOrder',[OrderController::class,'mostFeedbackedOrder']);
 
     Route::post('/store_offer', [OfferController::class, 'store']);
     Route::post('/update_offer/{id}', [OfferController::class, 'update']);

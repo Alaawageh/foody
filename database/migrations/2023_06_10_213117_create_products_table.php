@@ -22,6 +22,7 @@ return new class extends Migration
             $table->time('estimated_time')->nullable();
             $table->boolean('status')->default('1');
             $table->bigInteger('position')->nullable();
+            $table->text('notes')->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('branch_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
