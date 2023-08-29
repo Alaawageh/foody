@@ -17,8 +17,7 @@ class ProductController extends Controller
    
     public function AllProducts()
     {
-        $pro = Product::orderByRaw('position IS NULL ASC, position ASC')->get();
-        $products = ProductResource::collection($pro);
+        $products = Product::with('category')->orderByRaw('position IS NULL ASC, position ASC')->get();
 
         return $this->apiResponse($products,'success',200);  
     }
