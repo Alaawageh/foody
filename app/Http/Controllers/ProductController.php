@@ -31,7 +31,7 @@ class ProductController extends Controller
         }
 
         $products = $category->products()->get();
-        return $this->apiResponse($products,'success',200);
+        return $this->apiResponse($products->load('category'),'success',200);
     }
 
     public function show($id)
@@ -49,16 +49,16 @@ class ProductController extends Controller
     }
 
     
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255|regex:/(^[A-Za-z ]+$)+/',
             'price' => 'required|numeric|min:0',
             'ingredients' => 'required|string|min:3|max:2500',
             'image' => 'nullable|file||image|mimes:jpeg,jpg,png',
-            'estimated_time'=>'nullable|date_format:H:i:s',
+            'estimated_time'=>'nullable|date_format:i:s',
             'status' => 'in:0,1',
             'position' => 'nullable|integer|min:0',
-            'notes' => 'nullable',
             'category_id' => 'integer|exists:categories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
@@ -67,98 +67,50 @@ class ProductController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse(null,$validator->errors(),400);
         }
-        $products = Product::where('category_id',$request->category_id)->orderBy('position')->get();
-        if ($products->isEmpty())
-        {
-            // save new product with position 1
-            $product = new Product();
-            $product->name = $request->name;
-            $product->price = $request->price;
-            $product->ingredients = $request->ingredients;
-            $product->estimated_time = $request->estimated_time;
-            $product->position = $request->position;
-            $product->notes = $request->notes;
-            $product->category_id = $request->category_id;
-            $product->branch_id = $request->branch_id;
-            
-            if($request->hasFile('image'))
-            {
-                $image = $request->file('image');
-                $filename = $image->getClientOriginalName();
-                $request->image->move(public_path('/images/product'),$filename);
-                $product->image = $filename;
-            }
-            
-            $product->save();
 
+        $product = new Product();
+        $product->name = $request->name;
+        $product->price = $request->price;
+        $product->ingredients = $request->ingredients;
+        $product->estimated_time = $request->estimated_time;
+        $product->category_id = $request->category_id;
+        $product->branch_id = $request->branch_id;
+        $product->status = $request->status;
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $product->setImageAttribute($image);
+        }
+
+        if ($request->position) {
             
-            
-        }else{
-            // get highest existing position
-            $highest_position = $products->last()->position;
-            $position = $request->position;
-            // check if requested position is greater than highest existing position
-            if ($position > $highest_position)
-            {
-                // save new category with requested position
-                $product = new Product();
-                $product->name = $request->name;
-                $product->price = $request->price;
-                $product->ingredients = $request->ingredients;
-                $product->estimated_time = $request->estimated_time;
-                $product->notes = $request->notes;
-                $product->category_id = $request->category_id;
-                $product->branch_id = $request->branch_id;
-                $product->position = $highest_position+1;
-                if($request->hasFile('image'))
-                {
-                    $image = $request->file('image');
-                    $filename = $image->getClientOriginalName();
-                    $request->image->move(public_path('/images/product'),$filename);
-                    $product->image = $filename;
-                }
-                $product->save();
-                
-            }else{
-                // adjust positions of existing categories and add new category with adjusted position
-                foreach ($products as $product) {
-                    if ($product->position >= $position && $position !== null) {
-                        $product->position++;
-                        $product->save();
+
+            $products = Product::orderBy('position')->get();
+            if ($products->isNotEmpty()) {
+                $highest_position = $products->last()->position;
+                if ($request->position > $highest_position) {
+                    $product->position = $highest_position+1;
+                } else {
+                    foreach ($products as $pro) {
+                        if ($pro->position >= $request->position && $request->position !== null) {
+                            $pro->position++;
+                            $pro->save();
+                        }
                     }
                 }
-                $product = new Product();
-                $product->name = $request->name;
-                $product->price = $request->price;
-                $product->ingredients = $request->ingredients;
-                $product->estimated_time = $request->estimated_time;
-                $product->notes = $request->notes;
-                $product->category_id = $request->category_id;
-                $product->branch_id = $request->branch_id;
-                $product->position = $position;
-                if($request->hasFile('image'))
-                {
-                    $image = $request->file('image');
-                    $filename = $image->getClientOriginalName();
-                    $request->image->move(public_path('/images/product'),$filename);
-                    $product->image = $filename;
-                }
-                $product->save();
-    
-              
             }
         }
-        
-        
+        $product->position = $request->position;
+        $product->save();
+
         $ingredientID = $request->ingredientID ?? [];
         $product->ingredients()->attach($ingredientID);
-        
-        if($product)
-        {
-            return $this->apiResponse(new ProductResource($product),'Data successfully Saved',201);
-        }else{
-            return $this->apiResponse(null,'The Data Not Save',400);
-        }
+       if (! $product) {
+        return $this->apiResponse(null,'The Data Not Save',400);
+       }else{
+        return $this->apiResponse(new ProductResource($product),'Data successfully Saved',201);
+       }
+      
 
         
     }
@@ -171,9 +123,8 @@ class ProductController extends Controller
             'price' => 'numeric|min:0',
             'ingredients' => 'string|min:3|max:2500',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
-            'estimated_time'=>'nullable|date_format:H:i:s',
+            'estimated_time'=>'nullable|date_format:i:s',
             'position' => 'nullable|integer|min:0',
-            'notes' => 'nullable',
             'category_id' => 'integer|exists:categories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
         ]);
@@ -191,7 +142,6 @@ class ProductController extends Controller
             $product->price = $request->price;
             $product->ingredients = $request->ingredients;
             $product->estimated_time = $request->estimated_time;
-            $product->notes = $request->notes;
             $product->category_id = $request->category_id;
             $product->branch_id = $request->branch_id;
             $product->save();
@@ -215,13 +165,10 @@ class ProductController extends Controller
                     $product->position = $position;
                 }
             }
-            if($request->hasFile('image'))
-            {
-                File::delete(public_path('/images/product/'.$product->image));
+            if ($request->hasFile('image')) {
+                File::delete(public_path($product->image));
                 $image = $request->file('image');
-                $filename = $image->getClientOriginalName();
-                $request->image->move(public_path('/images/product'),$filename);
-                $product->image = $filename;
+                $product->setImageAttribute($image);
             }
             $product->save();
 

@@ -14,11 +14,11 @@ class FeedbackResource extends JsonResource
      */
     public function toArray($request)
     {
-        return [
-            'id'=>$this->id,
-            'text'=>$this->text,
-            'order_id'=>$this->order_id,
-        ];
-        // return parent::toArray($request);
+        // return [
+        //     'id'=>$this->id,
+        //     'text'=>$this->text,
+        //     'order_id'=>$this->order_id,
+        // ];
+        return parent::toArray($request);
     }
 }

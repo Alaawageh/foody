@@ -18,7 +18,7 @@ class IngredientResource extends JsonResource
             'id'=>$this->id,
             'name'=>$this->name,
             'price_by_piece'=>$this->price_by_piece,
-            'image' => url('/images/ingredient/'.$this->image),
+            'image' => url($this->image),
             'branch_id'=>$this->branch_id
         ];
     }

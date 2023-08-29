@@ -21,12 +21,12 @@ class FeedbackController extends Controller
         }
 
         $feedbacks = $order->feedbacks()->get();
-        return $this->apiResponse($feedbacks,'success',200);
+        return $this->apiResponse($feedbacks->load(['order']),'success',200);
     }
 
     public function show($id){
 
-        $feedback = Feedback::find($id);
+        $feedback = Feedback::with('order')->find($id);
         
         if($feedback)
         {
@@ -43,7 +43,7 @@ class FeedbackController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'text' => 'required|string|min:3|max:2500',
-            'order_id' => 'nullable|integer|exists:orders,id',
+            'order_id' => 'integer|exists:orders,id',
         ]);
 
         if ($validator->fails()) {
@@ -69,7 +69,7 @@ class FeedbackController extends Controller
 
         $validator = Validator::make($request->all(), [
             'text' => 'required|string|min:3|max:2500',
-            'order_id' => 'nullable|integer|exists:orders,id',
+            'order_id' => 'integer|exists:orders,id',
         ]);
 
         if ($validator->fails()) {

@@ -10,10 +10,15 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name' , 'image' , 'price' , 'ingredients' , 'estimated_time' , 'status' , 'position', 'notes' ,'category_id' , 'branch_id'
+        'name' , 'image' , 'price' , 'ingredients' , 'estimated_time' , 'status' , 'position' ,'category_id' , 'branch_id'
     ];
 
-    
+    public function setImageAttribute ($image)
+    {
+        $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
+        $image->move(public_path('images/product') , $newImageName);
+        return $this->attributes['image'] ='/'.'images/product'.'/' . $newImageName;
+    }
     
     public function category()
     {
@@ -38,7 +43,6 @@ class Product extends Model
     public function orders(){
         return $this->belongsToMany(Order::class,'orders_products')->withPivot('product_id', 'order_id', 'quantity');
     }
-    
    
     
 

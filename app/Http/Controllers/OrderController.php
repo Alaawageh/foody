@@ -54,7 +54,6 @@ class OrderController extends Controller
         $order->table_num = $v['table_num'];
         $order->branch_id = $v['branch_id'];
         $order->time = Carbon::now()->format('H:i:s');
-        // $order->save();
 
         $totalPrice = 0;
         
@@ -75,6 +74,7 @@ class OrderController extends Controller
                 $orderProduct->order_id = $order->id;
                 $orderProduct->product_id = $productData['product_id'];
                 $orderProduct->quantity = $productData['quantity'];
+                $orderProduct->notes = $productData['notes'];
                 $orderProduct->save();
 
                 
@@ -152,7 +152,7 @@ class OrderController extends Controller
             $order->table_num = $v['table_num'];
             $order->branch_id = $v['branch_id'];
             $order->time = Carbon::now()->format('H:i:s');
-            $order->save();
+            // $order->save();
 
             // Remove all existing order products and ingredients
             $order->products()->detach();
@@ -162,17 +162,23 @@ class OrderController extends Controller
             $products = $request->products;
             if ($products) {
                 foreach ($products as $productData) {
-                    $orderProduct = new OrderProduct();
-                    $orderProduct->order_id = $order->id;
-                    $orderProduct->product_id = $productData['product_id'];
-                    $orderProduct->quantity = $productData['quantity'];
-                    $orderProduct->save();
 
                     $product = Product::find($productData['product_id']);
 
                     if ($product) {
                         $productPrice = $product->price;
+                        $order->save();
+                    }else{
+                        return $this->apiResponse(null,'The product Not Found',404);
                     }
+                    $orderProduct = new OrderProduct();
+                    $orderProduct->order_id = $order->id;
+                    $orderProduct->product_id = $productData['product_id'];
+                    $orderProduct->quantity = $productData['quantity'];
+                    $orderProduct->notes = $productData['notes'];
+                    $orderProduct->save();
+
+                    
                     // Calculate the product subtotal
                     $productSubtotal = $productPrice * $productData['quantity'];
 
@@ -181,16 +187,21 @@ class OrderController extends Controller
 
                     if (isset($productData['ingredients'])) {
                         foreach ($productData['ingredients'] as $ingredientData) {
+
+                            $ingredient = Ingredient::find($ingredientData['ingredient_id']);
+                            if ($ingredient) {
+                                $ingredientPrice = $ingredient->price_by_piece;
+                            }else{
+                                return $this->apiResponse(null,'The ingredient Not Found',404);
+                            }
+
                             $orderIngredient = new OrderIngredient();
                             $orderIngredient->order_id = $order->id;
                             $orderIngredient->ingredient_id = $ingredientData['ingredient_id'];
                             $orderIngredient->quantity = $ingredientData['quantity'];
                             $orderIngredient->save();
 
-                            $ingredient = Ingredient::find($ingredientData['ingredient_id']);
-                            if ($ingredient) {
-                                $ingredientPrice = $ingredient->price_by_piece;
-                            }
+                            
 
                             // Calculate the ingredient subtotal
                             $ingredientSubtotal = $ingredientPrice * $ingredientData['quantity'];

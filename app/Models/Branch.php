@@ -13,6 +13,13 @@ class Branch extends Model
         protected $fillable = [
             'name' , 'about' , 'image' , 'address' , 'taxRate'
         ];
+
+        public function setImageAttribute ($image)
+        {
+            $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
+            $image->move(public_path('images/branch') , $newImageName);
+            return $this->attributes['image'] ='/'.'images/branch'.'/' . $newImageName;
+        }
         
         public function products()
         {

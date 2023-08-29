@@ -44,14 +44,8 @@ class OfferController extends Controller
     if ($validator->fails()) {
         return $this->apiResponse(null,$validator->errors(),400);
     }
-    $offer = new Offer();
 
-    $image = $request->file('image');
-    $filename = $image->getClientOriginalName();
-    $image->move(public_path('/images/offers'),$filename);
-    $offer->image = $filename;
-    $offer->save();
-
+    $offer = Offer::create($request->all());
     if($offer)
     {
         return $this->apiResponse(new OfferResource($offer),'The offer Saved',201);
@@ -62,34 +56,29 @@ class OfferController extends Controller
         
     }
 
-    public function update(Request $request ,$id)
-    {
-        $validator = Validator::make($request->all(), [
-            'image' => 'required|file|image|mimes:jpeg,jpg,png',
-        ]);
+    // public function update(Request $request ,$id)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'image' => 'required|file|image|mimes:jpeg,jpg,png',
+    //     ]);
         
-        if ($validator->fails()) {
-            return $this->apiResponse(null,$validator->errors(),400);
-        }
+    //     if ($validator->fails()) {
+    //         return $this->apiResponse(null,$validator->errors(),400);
+    //     }
 
-        $offer =Offer::find($id);
+    //     $offer =Offer::find($id);
 
-        if($offer)
-        {
-            File::delete(public_path('/images/offers/'.$offer->image));
+    //     if($offer)
+    //     {
+    //         File::delete(public_path($offer->image));
+    //         $offer->update($request->all());
 
-            $image = $request->file('image');
-            $filename = $image->getClientOriginalName();
-            $image->move(public_path('/images/offers'),$filename);
-            $offer->image = $filename;
-            $offer->save();
+    //         return $this->apiResponse(new OfferResource($offer),'The offer update',201);
+    //     }else{
+    //         return $this->apiResponse(null,'The offer Not Found',404);
+    //     }
 
-            return $this->apiResponse(new OfferResource($offer),'The offer update',201);
-        }else{
-            return $this->apiResponse(null,'The offer Not Found',404);
-        }
-
-    }
+    // }
 
     
     public function destroy($id){
@@ -98,9 +87,8 @@ class OfferController extends Controller
         
         if($offer)
         {
+            File::delete(public_path($offer->image));
             $offer->delete();
-
-            File::delete(public_path('/images/offers/'.$offer->image));
 
             return $this->apiResponse(null,'The offer deleted',200);
         }else{

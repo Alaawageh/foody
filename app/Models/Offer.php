@@ -11,4 +11,11 @@ class Offer extends Model
 
     protected $fillable=['image'];
 
+    public function setImageAttribute ($image)
+    {
+        $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
+        $image->move(public_path('images/offers') , $newImageName);
+        return $this->attributes['image'] ='/'.'images/offers'.'/' . $newImageName;
+    }
+
 }

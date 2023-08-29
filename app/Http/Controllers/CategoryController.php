@@ -15,6 +15,7 @@ class CategoryController extends Controller
     public function index()
     {
         $cats = Category::orderByRaw('position IS NULL ASC, position ASC')->get();
+
         $categories = CategoryResource::collection($cats);
 
         return $this->apiResponse($categories,'success',200);
@@ -24,11 +25,12 @@ class CategoryController extends Controller
     {
         $category = Category::find($id);
 
-        if($category)
+        if(! $category)
         {
-            return $this->apiResponse(new CategoryResource($category),'success',200);
-        }else{
             return $this->apiResponse(null,'The Category Not Found',404);
+            
+        }else {
+            return $this->apiResponse(new CategoryResource($category),'success',200);
         }
         
     }
@@ -37,7 +39,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:255|regex:/(^[A-Za-z ]+$)+/',
+            'name' => 'required|max:255|string',
             'position' => 'nullable|integer',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
         ]);
@@ -45,70 +47,42 @@ class CategoryController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse(null,$validator->errors(),400);
         }
-        $name = $request->name;
-        $position = $request->position;
-        $categories = Category::orderBy('position')->get();
-
-        // check if there are any categories
-        if ($categories->isEmpty())
+        $category = new Category();
+        $category->name = $request->name;
+        if($request->hasFile('image'))
         {
-            // save new category with position 1
-            $category = new Category;
-            $category->name = $name;
-            $category->position = $position;
-            if($request->hasFile('image')){
-               $image = $request->file('image');
-               $filename = $image->getClientOriginalName();
-               $image->move(public_path('/images/category'),$filename);
-               $category->image = $filename;
-           }
-            $category->save();
-        } else {
-            // get highest existing position
+            $image = $request->file('image');
+            $category->setImageAttribute($image);
+        }
+        if($request->position)
+        {
+            $categories = Category::orderBy('position')->get();
             $highest_position = $categories->last()->position;
-        
-            // check if requested position is greater than highest existing position
-            if ($position > $highest_position) {
-                // save new category with requested position
-                $category = new Category;
-                $category->name = $name;
+            if (! $highest_position) {
+
+                $category->position = $request->position;
+
+            }elseif ($request->position > $highest_position) {
                 $category->position = $highest_position+1;
-                if($request->hasFile('image')){
-                   $image = $request->file('image');
-                   $filename = $image->getClientOriginalName();
-                   $image->move(public_path('/images/category'),$filename);
-                   $category->image = $filename;
-               }
-                $category->save();
-            } else {
-                // adjust positions of existing categories and add new category with adjusted position
+            }else {
                 foreach ($categories as $cat) {
-                    if ($cat->position >= $position && $position !== null) {
+                    if ($cat->position >= $request->position && $request->position !== null) {
                         $cat->position++;
                         $cat->save();
                     }
                 }
-                $category = new Category;
-                $category->name = $name;
-                $category->position = $position;
-                if($request->hasFile('image')){
-                    $image = $request->file('image');
-                    $filename = $image->getClientOriginalName();
-                    $image->move(public_path('/images/category'),$filename);
-                    $category->image = $filename;
-                }
-                $category->save();
             }
+
+            $category->position = $request->position;
         }
+
+        $category->save();
         
-        // rest of the code remains the same
-        if($category){
-            return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);
-        } else {
+        if(! $category) {
             return $this->apiResponse(null,'Data Not Save',400);
+        } else {
+            return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);
         }
-        
-        
     }
 
     
@@ -117,7 +91,7 @@ class CategoryController extends Controller
     public function update(Request $request ,$id){
 
         $validator = Validator::make($request->all(), [
-            'name' => 'max:255|regex:/(^[A-Za-z ]+$)+/',
+            'name' => 'max:255|string',
             'position' => 'nullable|integer|min:0',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
         ]);
@@ -126,20 +100,29 @@ class CategoryController extends Controller
             return $this->apiResponse(null,$validator->errors(),400);
         }
 
-        $category=Category::find($id);
-        $position = $request->position;
-        if($category){
+        $category = Category::find($id);
+
+        if(! $category) {
+            return $this->apiResponse(null,'The Category Not Found',404);
+        }
+        
+        if ($category)
+        {
+            $position = $request->position;
 
             $category->name = $request->name;
-            if ($position != $category->position) {
+            if ($request->hasFile('image')) {
+                File::delete(public_path($category->image));
+                $image = $request->file('image');
+                $category->setImageAttribute($image);
+            }
+            if ($position && $position != $category->position) {
                 $categories = Category::orderBy('position')->get();
                 $highest_position = $categories->last()->position;
 
-                // check if requested position is greater than highest existing position
                 if ($position > $highest_position ) {
                     $category->position = $highest_position+1;
                 } else {
-                    // adjust positions of existing categories and update position of current category
                     foreach ($categories as $cat) {
                         if ($cat->id != $id && $cat->position >= $position && $position !== null) {
                             $cat->position++;
@@ -151,21 +134,9 @@ class CategoryController extends Controller
                 }
             }
         
-            // save changes to database
-            $category->save();
-           
-            if($request->hasFile('image')){
-                 File::delete(public_path('/images/category/'.$category->image));
-                $image = $request->file('image');
-                $filename = $image->getClientOriginalName();
-                $image->move(public_path('/images/category'),$filename);
-                $category->image = $filename;
-            }
             $category->save();
 
             return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);
-        }else{
-            return $this->apiResponse(null,'The Category Not Found',404);
         }
 
     }
@@ -175,15 +146,17 @@ class CategoryController extends Controller
 
         $category=Category::find($id);
 
-        if($category)
+        if(! $category)
         {
-            $category->delete();
-            
-            File::delete(public_path('/images/category/'.$category->image));
-
-            return $this->apiResponse(null,'The Data deleted',200);
-        }else{
             return $this->apiResponse(null,'The Category Not Found',404);
+            
+        }else{
+            
+            if ($category->image) {
+                File::delete(public_path($category->image));
+            }
+            $category->delete();
+            return $this->apiResponse(null,'The Data deleted',200);
         }
 
     }

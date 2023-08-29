@@ -19,14 +19,13 @@ class ProductResource extends JsonResource
             'id'=>$this->id,
             'name'=>$this->name,
             'position'=>$this->position,
-            'image' => url('/images/product/' .$this->image),
+            'image' => url($this->image),
             'price'=>$this->price,
             'ingredients'=>$this->ingredients,
             'estimated_time'=>$this->estimated_time,
             'status'=> $this->status,
             'category_id'=>$this->category_id,
             'branch_id'=>$this->branch_id,
-            'notes'=>$this->notes,
         ];
     }
 }

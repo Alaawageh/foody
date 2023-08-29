@@ -13,6 +13,13 @@ class Ingredient extends Model
         'name' , 'image' , 'price_by_piece' , 'branch_id'
     ];
 
+    public function setImageAttribute ($image)
+    {
+        $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
+        $image->move(public_path('images/ingredient') , $newImageName);
+        return $this->attributes['image'] ='/'.'images/ingredient'.'/' . $newImageName;
+    }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);

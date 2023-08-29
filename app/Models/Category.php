@@ -12,6 +12,13 @@ class Category extends Model
         'name', 'position' ,'image'
         ];
 
+        public function setImageAttribute ($image)
+        {
+            $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
+            $image->move(public_path('images/category') , $newImageName);
+            return $this->attributes['image'] ='/'.'images/category'.'/' . $newImageName;
+        }
+
         public function products()
         {
             return $this->hasMany(Product::class);

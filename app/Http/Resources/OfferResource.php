@@ -16,7 +16,7 @@ class OfferResource extends JsonResource
     {
         return [
             'id'=>$this->id,
-            'image' => url('/images/offers/' .$this->image),
+            'image' => url($this->image),
         ];
     }
 }
