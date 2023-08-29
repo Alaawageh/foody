@@ -54,28 +54,26 @@ class CategoryController extends Controller
             $image = $request->file('image');
             $category->setImageAttribute($image);
         }
-        if($request->position)
-        {
+        
+        if ($request->position) {
+            
+
             $categories = Category::orderBy('position')->get();
-            $highest_position = $categories->last()->position;
-            if (! $highest_position) {
-
-                $category->position = $request->position;
-
-            }elseif ($request->position > $highest_position) {
-                $category->position = $highest_position+1;
-            }else {
-                foreach ($categories as $cat) {
-                    if ($cat->position >= $request->position && $request->position !== null) {
-                        $cat->position++;
-                        $cat->save();
+            if ($categories->isNotEmpty()) {
+                $highest_position = $categories->last()->position;
+                if ($request->position > $highest_position) {
+                    $category->position = $highest_position+1;
+                } else {
+                    foreach ($categories as $cat) {
+                        if ($cat->position >= $request->position && $request->position !== null) {
+                            $cat->position++;
+                            $cat->save();
+                        }
                     }
                 }
             }
-
-            $category->position = $request->position;
         }
-
+        $category->position = $request->position;
         $category->save();
         
         if(! $category) {
@@ -105,11 +103,9 @@ class CategoryController extends Controller
         if(! $category) {
             return $this->apiResponse(null,'The Category Not Found',404);
         }
-        
+        $position = $request->position;
         if ($category)
         {
-            $position = $request->position;
-
             $category->name = $request->name;
             if ($request->hasFile('image')) {
                 File::delete(public_path($category->image));
@@ -133,7 +129,7 @@ class CategoryController extends Controller
                     $category->position = $position;
                 }
             }
-        
+            // $category->position = $position;
             $category->save();
 
             return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);

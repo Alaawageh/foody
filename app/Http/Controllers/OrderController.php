@@ -24,14 +24,14 @@ class OrderController extends Controller
     
     public function index()
     {
-        $orders = Order::with('products.ingredients', 'products')->get();
+        $orders = Order::with('products','ingredients')->get();
         return $this->apiResponse($orders,'success',200);
     }
 
     public function show($id)
     {
 
-        $order = Order::with('products.ingredients', 'products')->find($id);
+        $order = Order::with('products', 'ingredients')->find($id);
 
         if($order){
             return $this->apiResponse($order,'success',200);
@@ -123,7 +123,7 @@ class OrderController extends Controller
         $order->save();
         if ($order)
         {
-            event(new NewOrder($order));
+            event(new NewOrder($order->load(['products','ingredients'])));
             return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order Save', 201);
         }else{
             return $this->apiResponse(null, 'The order Not Save', 400);
@@ -219,9 +219,9 @@ class OrderController extends Controller
             $order->total_price = $totalPrice + ($totalPrice * $orderTaxRate);
             $order->save();
 
-            event(new NewOrder($order));
+            event(new NewOrder($order->load(['products','ingredients'])));
 
-            return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order updated successfully', 200);
+            return $this->apiResponse(new OrderResource($order->load(['products','ingredients'])), 'The order updated successfully', 200);
         }else{
             return $this->apiResponse(null, 'It is not possible to modify your order. The order is in preparation ', 400); 
         }
@@ -310,7 +310,7 @@ class OrderController extends Controller
     {
         $order = Order::where('table_num',$table_num)->where('status','Befor_Preparing')->latest()->first();
 
-        return $this->apiResponse($order->load(['products.ingredients','products']),'success',200);
+        return $this->apiResponse($order->load(['products','ingredients']),'success',200);
         
     } 
 
