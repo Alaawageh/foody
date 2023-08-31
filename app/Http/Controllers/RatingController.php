@@ -20,8 +20,7 @@ class RatingController extends Controller
      */
     public function index()
     {
-        $rating = Rating::with('product')->get();
-        $ratings = RatingResource::collection($rating);
+        $ratings = RatingResource::collection(Rating::get());
         return $this->apiResponse($ratings,'success',200);
     }
 

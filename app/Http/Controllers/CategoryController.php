@@ -14,11 +14,9 @@ class CategoryController extends Controller
     
     public function index()
     {
-        $cats = Category::orderByRaw('position IS NULL ASC, position ASC')->get();
+        $categories = Category::orderByRaw('position IS NULL ASC, position ASC')->get();
 
-        $categories = CategoryResource::collection($cats);
-
-        return $this->apiResponse($categories,'success',200);
+        return $this->apiResponse(CategoryResource::collection($categories),'success',200);
     }
 
     public function show($id)
@@ -30,7 +28,7 @@ class CategoryController extends Controller
             return $this->apiResponse(null,'The Category Not Found',404);
             
         }else {
-            return $this->apiResponse(new CategoryResource($category),'success',200);
+            return $this->apiResponse(CategoryResource::make($category),'success',200);
         }
         
     }

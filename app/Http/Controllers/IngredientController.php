@@ -29,12 +29,11 @@ class IngredientController extends Controller
         }
         $ingredients = $product->ingredients()->get();
 
-        $ingredientResources = [];
-    
-        foreach ($ingredients as $ingredient) {
-            $ingredientResources[] = new IngredientResource($ingredient);
+        if($ingredients->isEmpty()){
+            return $this->apiResponse(null ,'not found', 404);
+
         }
-        return $this->apiResponse($ingredientResources, 'success', 200);
+        return $this->apiResponse(IngredientResource::collection($ingredients), 'success', 200);
         
     }
 
@@ -42,11 +41,11 @@ class IngredientController extends Controller
 
         $ingredient = Ingredient::find($id);
         
-        if($ingredient)
+        if(! $ingredient)
         {
-            return $this->apiResponse(new IngredientResource($ingredient),'success',200);
+            return $this->apiResponse(null,'The ingredient Not Found',404);
         }
-        return $this->apiResponse(null,'The ingredient Not Found',404);
+        return $this->apiResponse(IngredientResource::make($ingredient),'success',200);
 
     }
 

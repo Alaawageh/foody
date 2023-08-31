@@ -10,14 +10,12 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name' , 'image' , 'price' , 'ingredients' , 'estimated_time' , 'status' , 'position' ,'category_id' , 'branch_id'
+        'name' , 'image' , 'price' , 'ingredient' , 'estimated_time' , 'status' , 'position' ,'category_id' , 'branch_id'
     ];
 
-    public function setImageAttribute ($image)
+    public function ingredients()
     {
-        $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
-        $image->move(public_path('images/product') , $newImageName);
-        return $this->attributes['image'] ='/'.'images/product'.'/' . $newImageName;
+        return $this->belongsToMany(Ingredient::class,'ingredient_product');
     }
     
     public function category()
@@ -30,10 +28,7 @@ class Product extends Model
     	return $this->belongsTo(Branch::class);
     }
 
-    public function ingredients()
-    {
-        return $this->belongsToMany(Ingredient::class,'ingredient_product');
-    }
+    
     
     public function ratings()
     {
@@ -45,7 +40,12 @@ class Product extends Model
     }
    
     
-
+    public function setImageAttribute ($image)
+    {
+        $newImageName = uniqid() . '_' . 'image' . '.' . $image->extension();
+        $image->move(public_path('images/product') , $newImageName);
+        return $this->attributes['image'] ='/'.'images/product'.'/' . $newImageName;
+    }
 
 
 }

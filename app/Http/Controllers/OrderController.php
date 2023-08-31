@@ -294,18 +294,7 @@ class OrderController extends Controller
 
     }
 
-    // public function getStatus($id)
-    // {
-    //     $order=Order::find($id);
-
-    //     if($order){
-          
-    //         return $this->apiResponse($order, 'This order '.$order->status, 201);
-    //     }else{
-    //          return $this->apiResponse(null, 'The Order Not Found', 404);
-            
-    //         }
-    // }
+   
     public function GetStatusOrder($table_num)
     {
         $order = Order::where('table_num',$table_num)->where('status','Befor_Preparing')->latest()->first();
@@ -314,66 +303,80 @@ class OrderController extends Controller
         
     } 
 
-    public function changeStatus($id)
+    public function getStatus()
+    {
+        $orders = Order::where('status','=','Befor_Preparing')->get();
+        
+        if($orders->isNotEmpty()){
+            return $this->apiResponse($orders, 'This order Befor_Preparing', 201);
+
+        }else{
+            return $this->apiResponse(null, ' Not Found', 404);
+
+        }
+    }
+
+    public function ChangeToPreparing(Request $request)
     {
 
-        $order=Order::find($id);
-
-        if($order && $order->status = 'Preparing')
+        $order = Order::where('id',$request->status_id)->first();
+        
+        if($order && $order->status = 'Befor_Preparing')
         {
+            $order->update([
+                'status' => 'Preparing',
+            ]);
+            $order->save();
+           
+            return $this->apiResponse($order, 'Changes saved successfully', 201);
+
+        }else{
+             return $this->apiResponse(null, ' Not Found', 404);
+            
+        }
+    } 
+
+    public function ChangeToDone(Request $request)
+    {
+        $order = Order::where('id',$request->status_id)->first();
+
+        if ($order && $order->status = 'Preparing'){
             $order->update([
                 'status' => 'Done',
                 'time_end' => Carbon::now()->format('H:i:s'),
             ]);
             $order->save();
-            // event(new NewOrder($order));
-
-            return $this->apiResponse($order, 'Changes saved successfully', 201);
-
-        }elseif ($order && $order->status = 'Befor_Preparing'){
-            $order->update([
-                'status' => 'Preparing',
-            ]);
-            $order->save();
             return $this->apiResponse($order, 'Changes saved successfully', 201);
         }else{
-             return $this->apiResponse(null, 'Changes are not saved', 400);
+             return $this->apiResponse(null, ' Not Found', 404);
             
-            }
-    } 
-    public function CheckPaid($id)
-    {
-        $order = Order::find($id);
-        if($order){
-            if($order->is_paid == 0){
-                return $this->apiResponse($order->is_paid, 'This order Not Paid Yet', 201);
-            }else{
-                return $this->apiResponse($order->is_paid, 'This order is Paid ', 201);
-            }
-        }else{
-            return $this->apiResponse(null, 'Not Found', 404);
         }
     }
-    public function ChangePaid($id)
+    public function CheckPaid()
+    {
+        $orders = Order::where('status','Done')->where('is_paid',0)->get();
+        
+        if($orders->isNotEmpty()){
+            return $this->apiResponse($orders, 'This orders Not Paid Yet', 201);
+        }else{
+            return $this->apiResponse(null, 'There are no ready orders', 404);
+        }
+    }
+    public function ChangePaid(Request $request)
     {
 
-        $order = Order::find($id);
-
+        $order = Order::where('id',$request->check_id)->first();
+        
         if(!$order){
             return $this->apiResponse(null, 'Order Not Found', 404);
-        }
-        
-        if($order->is_paid == '0' && $order->status == 'Done'){
+        }else{
             $order->update([
                 'is_paid' => '1',
             ]);
-           
             $order->save();
-            return $this->apiResponse($order->is_paid, ' Payment status changed successfully', 201);
-            
-        }else{
-            return $this->apiResponse(null, 'Changes are not saved Or Order Not Done yet', 400);
         }
+        return $this->apiResponse($order, ' Payment status changed successfully', 201);
+         
         
     }
 
@@ -412,7 +415,8 @@ class OrderController extends Controller
         }
     }
 
-    public function TotalOrderByMonth(){
+    public function TotalOrderByMonth()
+    {
         $ordersByMonth = Order::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
         ->groupBy('month')
         ->get();
@@ -441,7 +445,8 @@ class OrderController extends Controller
     }
 
     
-    public function ordersByDay(){
+    public function ordersByDay()
+    {
         $ordersByDay = DB::table('orders')
                 ->selectRaw('DATE(created_at) as day, COUNT(*) as count')
                 ->groupBy('day')

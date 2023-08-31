@@ -52,7 +52,7 @@ Route::get('GetStatusOrder/{table_num}',[OrderController::class,'GetStatusOrder'
 Route::put('/cart/update/{id}', [OrderController::class, 'update']);
 
 Route::post('/store_rating', [RatingController::class, 'store']);
-Route::post('/delete_rating/{id}', [RatingController::class, 'destroy']);
+// Route::post('/delete_rating/{id}', [RatingController::class, 'destroy']);
 
 
 Route::post('/store_feedback', [FeedbackController::class, 'store']);
@@ -60,13 +60,14 @@ Route::post('/update_feedback/{id}', [FeedbackController::class, 'update']);
 Route::post('/delete_feedback/{id}', [FeedbackController::class, 'destroy']);
 
 Route::group(['middleware' => 'kitchen'], function() {
-    Route::get('getStatus/{id}',[OrderController::class,'getStatus']);
-    Route::post('change_status/{id}',[OrderController::class,'changeStatus']);
+    Route::get('getStatus',[OrderController::class,'getStatus']);
+    Route::post('ChangeToPreparing',[OrderController::class,'ChangeToPreparing']);
+    Route::post('ChangeToDone',[OrderController::class,'ChangeToDone']);
 });
 
 Route::group(['middleware' =>  'casher'],function(){
-    Route::get('CheckPaid/{id}',[OrderController::class,'CheckPaid']);
-    Route::post('ChangePaid/{id}',[OrderController::class,'ChangePaid']);
+    Route::get('all_checks',[OrderController::class,'CheckPaid']);
+    Route::post('Change_check',[OrderController::class,'ChangePaid']);
 });
 
 Route::group(['middleware' => 'auth:api'],function() {

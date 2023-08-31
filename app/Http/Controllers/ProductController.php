@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\ProductResource;
 use App\Models\Category;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
@@ -17,10 +18,11 @@ class ProductController extends Controller
    
     public function AllProducts()
     {
-        $products = Product::with('category')->orderByRaw('position IS NULL ASC, position ASC')->get();
+        $products = Product::orderByRaw('position IS NULL ASC, position ASC')->get();
 
-        return $this->apiResponse($products,'success',200);  
+        return $this->apiResponse(ProductResource::collection($products),'success',200);  
     }
+
     
     public function index($categoryId)
     {
@@ -31,16 +33,22 @@ class ProductController extends Controller
         }
 
         $products = $category->products()->get();
-        return $this->apiResponse($products->load('category'),'success',200);
+
+        if($products->isEmpty()){
+            return $this->apiResponse(null ,'not found', 404);
+
+        }
+        return $this->apiResponse(ProductResource::collection($products),'success',200);
+        
     }
 
     public function show($id)
     {
-        $product = Product::with('ingredients')->find($id);
-        
+        $product = Product::find($id);
+
         if($product)
         {
-            return $this->apiResponse(new ProductResource($product),'success',200);
+            return $this->apiResponse(ProductResource::make($product),'success',200);
         }else{
             return $this->apiResponse(null,'The product Not Found',404);
         }
@@ -54,7 +62,7 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255|regex:/(^[A-Za-z ]+$)+/',
             'price' => 'required|numeric|min:0',
-            'ingredients' => 'required|string|min:3|max:2500',
+            'ingredient' => 'required|string|min:3|max:2500',
             'image' => 'nullable|file||image|mimes:jpeg,jpg,png',
             'estimated_time'=>'nullable|date_format:i:s',
             'status' => 'in:0,1',
@@ -71,8 +79,8 @@ class ProductController extends Controller
         $product = new Product();
         $product->name = $request->name;
         $product->price = $request->price;
-        $product->ingredients = $request->ingredients;
-        $product->estimated_time = $request->estimated_time;
+        $product->ingredient = $request->ingredient;
+        $product->estimated_time = Carbon::createFromTimestamp($request->estimated_time)->format("i:s");
         $product->category_id = $request->category_id;
         $product->branch_id = $request->branch_id;
         $product->status = $request->status;
@@ -121,7 +129,7 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'max:255|regex:/(^[A-Za-z ]+$)+/',
             'price' => 'numeric|min:0',
-            'ingredients' => 'string|min:3|max:2500',
+            'ingredient' => 'string|min:3|max:2500',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'estimated_time'=>'nullable|date_format:i:s',
             'position' => 'nullable|integer|min:0',
@@ -140,8 +148,8 @@ class ProductController extends Controller
         if($product){
             $product->name = $request->name;
             $product->price = $request->price;
-            $product->ingredients = $request->ingredients;
-            $product->estimated_time = $request->estimated_time;
+            $product->ingredient = $request->ingredient;
+            $product->estimated_time = Carbon::createFromTimestamp($request->estimated_time)->format("i:s");
             $product->category_id = $request->category_id;
             $product->branch_id = $request->branch_id;
             $product->save();

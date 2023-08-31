@@ -3,28 +3,25 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\CategoryResource;
+use App\Http\Resources\IngredientResource;
 
 class ProductResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
-     */
+    
     public function toArray($request)
     {
-        // return parent::toArray($request);
         return [
             'id'=>$this->id,
             'name'=>$this->name,
             'position'=>$this->position,
             'image' => url($this->image),
             'price'=>$this->price,
-            'ingredients'=>$this->ingredients,
-            'estimated_time'=>$this->estimated_time,
+            'ingredient'=>$this->ingredient,
+            'estimated_time'=>date($this->estimated_time),
             'status'=> $this->status,
-            'category_id'=>$this->category_id,
+            'category'=>CategoryResource::make($this->category),
+            'extraIngredients'=>IngredientResource::collection($this->ingredients),
             'branch_id'=>$this->branch_id,
         ];
     }

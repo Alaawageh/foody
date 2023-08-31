@@ -26,7 +26,7 @@ class UserController extends Controller
 
         try {
             $rules = [
-                "email" => "required|min:1|max:16|email",
+                "email" => "required|email",
                 "password" => "required|min:8|max:24|regex:/(^[A-Za-z0-9]+$)+/"
             ];
 
@@ -69,7 +69,7 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|regex:/(^[A-Za-z ]+$)+/|between:2,100',
-            'email' => 'required|email|min:1|max:16|unique:users',
+            'email' => 'required|email|unique:users',
             'password' => "required|min:8|max:24|regex:/(^[A-Za-z0-9]+$)+/",
             'type' => 'in:admin,Casher,Kitchen',
             'branch_id' => 'nullable|integer|exists:branches,id'
@@ -126,7 +126,7 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'regex:/(^[A-Za-z ]+$)+/|between:2,100',
-            'email' => 'email|min:1|max:16|unique:users',
+            'email' => 'email|unique:users',
             'password' => "min:8|max:24|regex:/(^[A-Za-z0-9]+$)+/",
             'type' => 'in:admin,Casher,Kitchen',
             'branch_id' => 'nullable|integer|exists:branches,id'
