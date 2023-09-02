@@ -10,9 +10,10 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\ResturantController;
-
+use App\Http\Controllers\ServiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,9 +26,7 @@ use App\Http\Controllers\ResturantController;
 |
 */
 
-
 Route::post('/store_resturant', [ResturantController::class, 'store']);
-
 
 Route::post('login', [UserController::class, 'login']);
 
@@ -48,16 +47,14 @@ Route::get('/offers', [OfferController::class, 'index']);
 Route::get('/show_offer/{id}', [OfferController::class, 'show']);
 
 Route::post('/cart/add', [OrderController::class, 'store']);
-Route::get('GetStatusOrder/{table_num}',[OrderController::class,'GetStatusOrder']);
+Route::post('GetStatusOrder',[OrderController::class,'GetStatusOrder']);
 Route::put('/cart/update/{id}', [OrderController::class, 'update']);
+Route::post('cart/rate',[OrderController::class,'getOrder']);
 
 Route::post('/store_rating', [RatingController::class, 'store']);
-// Route::post('/delete_rating/{id}', [RatingController::class, 'destroy']);
 
+Route::post('/service/add', [ServiceController::class, 'store']);
 
-Route::post('/store_feedback', [FeedbackController::class, 'store']);
-Route::post('/update_feedback/{id}', [FeedbackController::class, 'update']);
-Route::post('/delete_feedback/{id}', [FeedbackController::class, 'destroy']);
 
 Route::group(['middleware' => 'kitchen'], function() {
     Route::get('getStatus',[OrderController::class,'getStatus']);
@@ -71,10 +68,6 @@ Route::group(['middleware' =>  'casher'],function(){
 });
 
 Route::group(['middleware' => 'auth:api'],function() {
-
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/show_order/{id}', [OrderController::class, 'show']);
-
     Route::post('logout', [UserController::class, 'logout']);
 });
 
@@ -95,35 +88,40 @@ Route::group(['middleware' => ['auth:api' ,'admin']], function () {
     Route::post('/update_product/{id}', [ProductController::class, 'update']);
     Route::post('/delete_product/{id}', [ProductController::class, 'destroy']);
     Route::get('/edit_status/{id}', [ProductController::class, 'edit']);// on off
-    Route::get('/product/totalSales',[ProductController::class,'TotalSalesByMonth']);
-    Route::get('/product/maxSales',[ProductController::class,'maxSales']);
-    Route::get('/product/avgSales',[ProductController::class,'avgSalesByYear']);
-    Route::get('/product/mostRequestedProduct',[ProductController::class,'mostRequestedProduct']);
-    Route::get('/product/leastRequestedProduct',[ProductController::class,'leastRequestedProduct']);
+    
+    Route::get('/product/totalSales',[HomeController::class,'TotalSalesByMonth']);
+    Route::get('/product/maxSales',[HomeController::class,'maxSales']);
+    Route::get('/product/avgSales',[HomeController::class,'avgSalesByYear']);
+    Route::get('/product/mostRequestedProduct',[HomeController::class,'mostRequestedProduct']);
+    Route::get('/product/leastRequestedProduct',[HomeController::class,'leastRequestedProduct']);
+    Route::get('/ready_order/{id}',[HomeController::class,'readyOrder']);
+    Route::get('/service/avgRating',[HomeController::class,'avgRating']);
+    Route::get('/peakTimes',[HomeController::class,'peakTimes']);
+    Route::get('/order/orderByDay',[HomeController::class,'ordersByDay']);
+    Route::get('/mostRatedProduct', [HomeController::class, 'mostRatedProduct']);//منتج اكثر تقييم
+    Route::get('/leastRatedProduct', [HomeController::class, 'leastRatedProduct']);//منتج اقل تقييم
+
   
     //Order_Apis
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/show_order/{id}', [OrderController::class, 'show']);
     Route::post('/delete_order/{id}', [OrderController::class, 'destroy']);
-    Route::get('/ready_order/{id}',[OrderController::class,'readyOrder']);//قدي اخد الاوردر وقت
-    Route::get('/peakTimes',[OrderController::class,'peakTimes']);//اوقات الذروة
     Route::get('/export-order-report', [OrderController::class, 'exportOrderReport']);//تصدير اكسل 
-
     Route::get('/order/totalOrders',[OrderController::class,'TotalOrderByMonth']);//اجمالي الاوردرات لكل شهر
-    Route::get('/order/Ratedorder',[OrderController::class,'mostRatedorder']);//الاوردرات الاكثر تقييما
-    Route::get('/order/orderByDay',[OrderController::class,'ordersByDay']);
-    Route::get('/order/mostFeedbackedOrder',[OrderController::class,'mostFeedbackedOrder']);
+    // Route::get('/order/Ratedorder',[OrderController::class,'mostRatedorder']);//الاوردرات الاكثر تقييما
+    // Route::get('/order/mostFeedbackedOrder',[OrderController::class,'mostFeedbackedOrder']);
 
     Route::post('/store_offer', [OfferController::class, 'store']);
-    Route::post('/update_offer/{id}', [OfferController::class, 'update']);
     Route::post('/delete_offer/{id}', [OfferController::class, 'destroy']);
 
-    Route::get('/mostRatedProduct', [RatingController::class, 'mostRatedProduct']);//منتج اكثر تقييم
-    Route::get('/leastRatedProduct', [RatingController::class, 'leastRatedProduct']);//منتج اقل تقييم
-    Route::get('/avgRating/{id}', [RatingController::class, 'avgRating']);// معدل تقييم المنتج
+
+    Route::get('product/avgRating', [RatingController::class, 'avgRating']);// معدل تقييم المنتج
     Route::get('/ratings', [RatingController::class, 'index']);
     Route::get('/show_rating/{id}', [RatingController::class, 'show']);
 
-    Route::get('/feedbacks/{orderId}', [FeedbackController::class, 'index']);
-    Route::get('/show_feedback/{id}', [FeedbackController::class, 'show']);
+    Route::get('/services', [ServiceController::class, 'index']);
+    Route::get('/service/{id}', [ServiceController::class, 'show']);
+
 
 });
 Route::group(['middleware' =>  ['auth:api', 'SuperAdmin']], function () {

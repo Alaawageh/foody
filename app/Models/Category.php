@@ -9,7 +9,7 @@ class Category extends Model
 {
     use HasFactory;
     protected $fillable=[
-        'name', 'position' ,'image'
+        'name', 'name_trans' , 'position' , 'image'
         ];
 
         public function setImageAttribute ($image)

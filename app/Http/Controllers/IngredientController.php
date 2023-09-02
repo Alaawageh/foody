@@ -54,6 +54,7 @@ class IngredientController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255|string',
+            'name_trans' => 'nullable|string',
             'price_by_piece' => 'required|numeric|min:0',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'branch_id' => 'integer|exists:branches,id',
@@ -62,9 +63,13 @@ class IngredientController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse(null,$validator->errors(),400);
         }
-
-        $ingredient = Ingredient::create($request->all());
-
+        
+        $ingredient = Ingredient::create($request->except('image'));
+        if($request->hasFile('image'))
+        {
+            $image = $request->file('image');
+            $ingredient->setImageAttribute($image);
+        }
         if (! $ingredient)
         {
             return $this->apiResponse(null,'Data Not Saved',400);
@@ -76,12 +81,11 @@ class IngredientController extends Controller
     }
 
     
-
-    
     public function update(Request $request ,$id){
 
         $validator = Validator::make($request->all(), [
             'name' => 'max:255|string',
+            'name_trans' => 'nullable|string',
             'price_by_piece' => 'numeric|min:0',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
             'branch_id' => 'integer|exists:branches,id',

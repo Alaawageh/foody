@@ -21,10 +21,9 @@ class OrderResource extends JsonResource
             'time' => $this->time,
             'time_end' => $this->time_end,
             'status' => $this->status,
-            'products' => ProductResource::collection('products'),
-            'extraIngredients'=>IngredientResource::collection($this->ingredients),
+            'products' => ProductResource::collection($this->products),
+            'ingredients'=>IngredientResource::collection($this->ingredients),
                    
         ];
-        // return parent::toArray($request);
     }
 }

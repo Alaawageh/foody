@@ -10,7 +10,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name' , 'image' , 'price' , 'ingredient' , 'estimated_time' , 'status' , 'position' ,'category_id' , 'branch_id'
+        'name' , 'name_trans', 'image' , 'price' , 'ingredient' , 'ingredient_trans' ,'estimated_time' , 'status' , 'position' ,'category_id' , 'branch_id'
     ];
 
     public function ingredients()

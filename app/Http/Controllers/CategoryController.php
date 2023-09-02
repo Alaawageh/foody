@@ -38,6 +38,7 @@ class CategoryController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|max:255|string',
+            'name_trans' => 'nullable|string|max:255',
             'position' => 'nullable|integer',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
         ]);
@@ -47,31 +48,39 @@ class CategoryController extends Controller
         }
         $category = new Category();
         $category->name = $request->name;
+        $category->name_trans = $request->name_trans;
         if($request->hasFile('image'))
         {
             $image = $request->file('image');
             $category->setImageAttribute($image);
         }
-        
-        if ($request->position) {
-            
+        if($request->position) {
 
             $categories = Category::orderBy('position')->get();
+            
             if ($categories->isNotEmpty()) {
                 $highest_position = $categories->last()->position;
                 if ($request->position > $highest_position) {
                     $category->position = $highest_position+1;
                 } else {
-                    foreach ($categories as $cat) {
-                        if ($cat->position >= $request->position && $request->position !== null) {
-                            $cat->position++;
-                            $cat->save();
-                        }
+                   foreach($categories as $cat){
+                    $positions = explode(',',$cat->position);
+
+                    if(in_array($request->position, $positions)){
+                        $cat->position++;
+                        $cat->save();
                     }
+                    
+                   }
+                    $category->position = $request->position;
                 }
-            }
+                
+            }else{
+                $category->position = 1 ;
+            } 
         }
-        $category->position = $request->position;
+        
+        
         $category->save();
         
         if(! $category) {
@@ -88,6 +97,7 @@ class CategoryController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'max:255|string',
+            'name_trans' => 'nullable|string',
             'position' => 'nullable|integer|min:0',
             'image' => 'nullable|file|image|mimes:jpeg,jpg,png',
         ]);
@@ -105,6 +115,8 @@ class CategoryController extends Controller
         if ($category)
         {
             $category->name = $request->name;
+            $category->name_trans = $request->name_trans;
+            
             if ($request->hasFile('image')) {
                 File::delete(public_path($category->image));
                 $image = $request->file('image');

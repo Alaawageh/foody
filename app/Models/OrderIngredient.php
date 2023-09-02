@@ -11,7 +11,7 @@ class OrderIngredient extends Model
     
     protected $table = 'orders_ingredients';
 
-    protected $fillable = ['order_id', 'ingredient_id', 'quantity'];
+    protected $fillable = ['order_id', 'ingredient_id'];
     
     public function ingredient()
     {

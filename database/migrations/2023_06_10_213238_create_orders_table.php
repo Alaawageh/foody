@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->enum('status',[Status::Befor_Preparing,Status::Preparing,Status::Done])->default(Status::Befor_Preparing);
+            $table->enum('status',['Befor_Preparing','Preparing','Done'])->default('Befor_Preparing');
             $table->time('time')->nullable();//time_preparing
             $table->time('time_end')->nullable();//time_done
             $table->string('table_num')->default('sss');
@@ -36,11 +36,6 @@ return new class extends Migration
         Schema::dropIfExists('orders');
     }
 };
-class Status
-{
-    const Befor_Preparing    = "Befor_Preparing";
-	const Preparing    = "Preparing";
-	const Done  = "Done";
-}
+
 
 

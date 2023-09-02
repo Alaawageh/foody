@@ -10,7 +10,7 @@ class Ingredient extends Model
     use HasFactory;
     
     protected $fillable = [
-        'name' , 'image' , 'price_by_piece' , 'branch_id'
+        'name' , 'name_trans', 'image' , 'price_by_piece' , 'branch_id'
     ];
 
     public function setImageAttribute ($image)

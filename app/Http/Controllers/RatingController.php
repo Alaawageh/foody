@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RatingResource;
 use App\Models\Rating;
-use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -20,10 +18,11 @@ class RatingController extends Controller
      */
     public function index()
     {
+        
         $ratings = RatingResource::collection(Rating::get());
         return $this->apiResponse($ratings,'success',200);
     }
-
+    
 
     
     public function store(Request $request)
@@ -50,11 +49,11 @@ class RatingController extends Controller
 
     public function show($id)
     {
-        $rating = Rating::with('product')->find($id);
+        $rating = Rating::find($id);
    
         if($rating)
         {
-            return $this->apiResponse(new RatingResource($rating),'success',200);
+            return $this->apiResponse(RatingResource::collection($rating),'success',200);
         }
         return $this->apiResponse(null,'The rating Not Found',404);
     }
@@ -74,54 +73,17 @@ class RatingController extends Controller
     }
 
     
-    public function avgRating($id)
+    public function avgRating()
     {
-        $product = Product::find($id);
+        $average_rating = Rating::selectRaw('AVG(value) as average_rating , product_id')->get();
 
-        if($product)
+        if($average_rating)
         {
-            $average_rating = $product->ratings->avg('value');
-
             return $this->apiResponse(round($average_rating),'this rating from all user for this product',200);
         }
         return $this->apiResponse(null,'No product has been requested yet',404);
     }
 
-    public function mostRatedProduct()
-    {
-        $mostRatedProduct = DB::table('products')
-        ->join('ratings', 'products.id', '=', 'ratings.product_id')
-        ->select('products.name', DB::raw('AVG(ratings.value) as average_rating'))
-        ->groupBy('products.name')
-        ->orderBy('average_rating','DESC')
-        ->limit('5')
-        ->get();
 
-        if($mostRatedProduct)
-        {
-            return $this->apiResponse($mostRatedProduct,'The most rated product',200);
-
-        }else{
-            return $this->apiResponse(null,'No product has been Rated yet',404);
-        }
-    }
-
-    public function leastRatedProduct(){
-        $mostRatedProduct = DB::table('products')
-        ->join('ratings', 'products.id', '=', 'ratings.product_id')
-        ->select('products.name', DB::raw('AVG(ratings.value) as average_rating'))
-        ->groupBy('products.name')
-        ->orderBy('average_rating','ASC')
-        ->limit('5')
-        ->get();
-
-        if($mostRatedProduct)
-        {
-            return $this->apiResponse($mostRatedProduct,'The most rated product',200);
-
-        }else{
-            return $this->apiResponse(null,'No product has been Rated yet',404);
-        }
-    }
 
 }

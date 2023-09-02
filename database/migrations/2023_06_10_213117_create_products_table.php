@@ -16,11 +16,13 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('name_trans')->nullable();
             $table->string('image')->nullable();
             $table->double('price');
             $table->text('ingredient');
-            $table->time('estimated_time')->format("i:s");
-            $table->boolean('status')->default('1');
+            $table->text('ingredient_trans')->nullable();
+            $table->time('estimated_time')->format("%i:%s");
+            $table->boolean('status')->default(1);
             $table->bigInteger('position')->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('branch_id')->constrained()->onDelete('cascade')->onUpdate('cascade');

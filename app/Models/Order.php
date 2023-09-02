@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Resources\OrderDetailsResource;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,13 +31,10 @@ class Order extends Model
     
     public function ingredients()
     {
-        return $this->belongsToMany(Ingredient::class, 'orders_ingredients')->withPivot('order_id', 'ingredient_id','quantity');
+        return $this->belongsToMany(Ingredient::class, 'orders_ingredients')->withPivot('order_id', 'ingredient_id');
     }
-
-    public function feedbacks()
-    {
-        return $this->hasMany(Feedback::class);
-    }
+    
+    
 
     
     

@@ -18,7 +18,6 @@ class BranchResource extends JsonResource
             'id'=>$this->id,
             'name'=>$this->name,
             'about'=>$this->about,
-            'image' =>$this->image,
             'image'=>url($this->image),
             'address'=>$this->address,
             'taxRate'=>$this->taxRate,

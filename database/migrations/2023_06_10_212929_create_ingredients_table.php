@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('ingredients', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->required();
+            $table->string('name');
+            $table->string('name_trans')->nullable();
             $table->string('image')->nullable();
             $table->double('price_by_piece')->required();
             $table->foreignId('branch_id')->constrained()->onDelete('cascade')->onUpdate('cascade');

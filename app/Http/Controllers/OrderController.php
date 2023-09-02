@@ -8,6 +8,7 @@ use App\Exports\OrdersExport;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Http\Resources\OrderResource;
+use App\Http\Resources\RatingResource;
 use App\Models\Ingredient;
 use App\Models\OrderIngredient;
 use App\Models\OrderProduct;
@@ -24,17 +25,17 @@ class OrderController extends Controller
     
     public function index()
     {
-        $orders = Order::with('products','ingredients')->get();
-        return $this->apiResponse($orders,'success',200);
+        $orders = Order::get();
+        return $this->apiResponse(OrderResource::collection($orders),'success',200);
     }
 
     public function show($id)
     {
 
-        $order = Order::with('products', 'ingredients')->find($id);
+        $order = Order::find($id);
 
         if($order){
-            return $this->apiResponse($order,'success',200);
+            return $this->apiResponse(OrderResource::make($order),'success',200);
         }else{
             return $this->apiResponse(null,'The order Not Found',404);
         }
@@ -98,13 +99,13 @@ class OrderController extends Controller
                         $orderIngredient = new OrderIngredient();
                         $orderIngredient->order_id = $order->id;
                         $orderIngredient->ingredient_id = $ingredientData['ingredient_id'];
-                        $orderIngredient->quantity = $ingredientData['quantity'];
+                        // $orderIngredient->quantity = $ingredientData['quantity'];
                         $orderIngredient->save();
 
                        
 
                         // Calculate the ingredient subtotal
-                        $ingredientSubtotal = $ingredientPrice * $ingredientData['quantity'];
+                        $ingredientSubtotal = $ingredientPrice;
                         
                         // Add the ingredient subtotal to the total price
                         $totalPrice += $ingredientSubtotal;
@@ -123,7 +124,7 @@ class OrderController extends Controller
         $order->save();
         if ($order)
         {
-            event(new NewOrder($order->load(['products','ingredients'])));
+            event(new NewOrder($order->load('products')));
             return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order Save', 201);
         }else{
             return $this->apiResponse(null, 'The order Not Save', 400);
@@ -243,22 +244,11 @@ class OrderController extends Controller
 
     }
 
-    public function peakTimes()
-   {
-   
-    $peakHours = Order::select('time')->groupBy('time')->orderByRaw('COUNT(time) DESC')->first();
-    if ($peakHours) {
-        return $this->apiResponse($peakHours,'This time is peak time',200);
-    } else {
-        return $this->apiResponse(null,'No product has been requested yet',404);
-    }
-    
-   }
+
 
     public function exportOrderReport(Request $request)
     {
-        // $start_at = date($request->start_at);
-        // $end_at = date($request->end_at);
+
         $start_at = $request->input('start_at');
         $end_at = $request->input('end_at');
         $orders = Order::whereBetween('created_at', [$start_at,$end_at])->get();
@@ -273,33 +263,14 @@ class OrderController extends Controller
         }
     }
     
-    public function readyOrder($id)
-    {
 
-        $order = Order::where('id', $id)->first();
-        if(! $order->time_end)
-        {
-            return $this->apiResponse(null, 'This order Preparing', 201);
-        }
-        $start_at = Carbon::parse($order->time);
-        $end_at = Carbon::parse($order->time_end);
-        
-        $preparationTime = $end_at->diff($start_at)->format('%H:%i:%s');
-
-        if($preparationTime){
-            return $this->apiResponse($preparationTime,'Order preparation time',200);
-        } else {
-            return $this->apiResponse(null,'Not Found',404);
-        }
-
-    }
 
    
-    public function GetStatusOrder($table_num)
+    public function GetStatusOrder(Request $request)
     {
-        $order = Order::where('table_num',$table_num)->where('status','Befor_Preparing')->latest()->first();
+        $order = Order::where('table_num',$request->table_num)->where('status','Befor_Preparing')->latest()->first();
 
-        return $this->apiResponse($order->load(['products','ingredients']),'success',200);
+        return $this->apiResponse(OrderResource::collection($order),'success',200);
         
     } 
 
@@ -339,7 +310,7 @@ class OrderController extends Controller
     public function ChangeToDone(Request $request)
     {
         $order = Order::where('id',$request->status_id)->first();
-
+        
         if ($order && $order->status = 'Preparing'){
             $order->update([
                 'status' => 'Done',
@@ -380,40 +351,6 @@ class OrderController extends Controller
         
     }
 
-    public function mostRequestedProduct()
-    {
-        $mostRequestedProduct = DB::table('products')
-            ->leftJoin('orders_products', 'products.id', '=', 'orders_products.product_id')->select('products.name')
-            ->groupBy('products.name')
-            ->orderByRaw('COUNT(product_id) DESC')
-            ->limit(5)
-            ->get();
-             
-        if ($mostRequestedProduct) {
-           
-            return $this->apiResponse($mostRequestedProduct,'success',200);
-           
-                
-        } else {
-             return $this->apiResponse(null,'No product has been requested yet',404);
-        }
-    }
-
-    public function leastRequestedProduct()
-    {
-        $leastRequestedProduct = DB::table('products')
-        ->leftJoin('orders_products', 'products.id', '=', 'orders_products.product_id')->select('products.name')
-        ->groupBy('products.name')
-        ->orderByRaw('COUNT(product_id)')
-        ->limit(5)
-        ->get();
-
-        if ($leastRequestedProduct) {
-            return $this->apiResponse($leastRequestedProduct,'success',200);
-        } else {
-            return $this->apiResponse(null,'No product has been requested yet',404);
-        }
-    }
 
     public function TotalOrderByMonth()
     {
@@ -425,48 +362,15 @@ class OrderController extends Controller
 
     }
 
-    public function mostRatedorder()
+    
+    public function getOrder(Request $request)
     {
-        $mostRatedProduct = DB::table('orders')
-        ->join('feedbacks', 'orders.id', '=', 'feedbacks.order_id')
-        ->select('orders.id', DB::raw('COUNT(feedbacks.id) as total_feedbacks'))
-        ->groupBy('orders.id')
-        ->orderBy('total_feedbacks','DESC')
-        ->limit('5')
-        ->get();
-
-        if($mostRatedProduct)
-        {
-            return $this->apiResponse($mostRatedProduct,'The most rated product',200);
-
-        }else{
-            return $this->apiResponse(null,'No product has been Rated yet',404);
+        $order = Order::where('table_num',$request->table_num)->where('status','Done')->latest()->first();
+        if(!$order){
+            return $this->apiResponse(null,'not found',404);
         }
+        return $this->apiResponse(OrderResource::make($order),'success',200);
+        
     }
-
-    
-    public function ordersByDay()
-    {
-        $ordersByDay = DB::table('orders')
-                ->selectRaw('DATE(created_at) as day, COUNT(*) as count')
-                ->groupBy('day')
-                ->get();
-        return $this->apiResponse($ordersByDay,'The number of orders by day',200);
-
-    }
-    public function mostFeedbackedOrder()
-    {
-        $mostFeedbackedOrder = DB::table('orders')
-                       ->select('orders.id', DB::raw('COUNT(feedbacks.id) as feedback_count'))
-                       ->leftJoin('feedbacks', 'orders.id', '=', 'feedbacks.order_id')
-                       ->groupBy('orders.id')
-                       ->orderByDesc('feedback_count')
-                       ->limit(1)
-                       ->first();
-        return $this->apiResponse($mostFeedbackedOrder,'success',200);
-
-    }
-    
-   
 }
 
