@@ -107,15 +107,10 @@ class ProductController extends Controller
                     $product->position = $highest_position+1;
                 } else {
                     foreach ($products as $pro) {
-                        if($request->position == $pro->position  &&$pro->position != null ){
+                        if($pro->position >= $request->position && $pro->position != null ){
                             $pro->position++;
                             $pro->save();
-                            for($i = $request->position ; $i < count($products) ; $i++){
-                                $products[$i]->position++; // Increment the position by 1
-                                $products[$i]->save();
-                            }
-                            
-                        }
+                        } 
                     }
                     $product->position = $request->position;
                 }
@@ -126,8 +121,11 @@ class ProductController extends Controller
         
         $product->save();
 
+        $this->reOrder($request);
+
         $ingredientID = $request->ingredientID ?? [];
         $product->ingredients()->attach($ingredientID);
+
        if (! $product) {
         return $this->apiResponse(null,'The Data Not Save',400);
        }else{
@@ -184,14 +182,9 @@ class ProductController extends Controller
                 } else {
                     // adjust positions of existing categories and update position of current category
                     foreach ($products as $pro) {
-                        if($request->position == $pro->position  &&$pro->position != null ){
-                            // $pro->position++;
+                        if($pro->position >= $request->position && $pro->position != null ){
+                            $pro->position++;
                             $pro->save();
-                            for($i = $request->position ; $i < count($products) ; $i++){
-                                $products[$i]->position++; // Increment the position by 1
-                                $products[$i]->save();
-                            }
-                            
                         } 
                     }
                     $product->position = $position;
@@ -203,6 +196,8 @@ class ProductController extends Controller
                 $product->setImageAttribute($image);
             }
             $product->save();
+
+            $this->reOrder($request);
 
             $ingredientID = $request->ingredientID ?? [];
             $product->ingredients()->sync($ingredientID);
@@ -246,6 +241,19 @@ class ProductController extends Controller
         $product->save();
 
         return $this->apiResponse($product->status,'Status change successfully.',200);
+    }
+
+    public function reOrder(Request $request){
+        $products = Product::where('category_id',$request->category_id)->orderBy('position','ASC')->get();
+        $i = 1;
+        foreach($products as $pro){
+            if($pro->position !=null){
+                $pro->position = $i;
+                $pro->save();
+                $i++;
+            }
+          
+        }
     }
 
 

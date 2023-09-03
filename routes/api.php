@@ -47,9 +47,10 @@ Route::get('/offers', [OfferController::class, 'index']);
 Route::get('/show_offer/{id}', [OfferController::class, 'show']);
 
 Route::post('/cart/add', [OrderController::class, 'store']);
-Route::post('GetStatusOrder',[OrderController::class,'GetStatusOrder']);
+Route::post('GetStatusOrder',[OrderController::class,'GetStatusOrder']);//get order for edit order
 Route::put('/cart/update/{id}', [OrderController::class, 'update']);
-Route::post('cart/rate',[OrderController::class,'getOrder']);
+
+Route::post('cart/rate',[OrderController::class,'getOrderforRate']);//get order for rating
 
 Route::post('/store_rating', [RatingController::class, 'store']);
 
@@ -57,7 +58,7 @@ Route::post('/service/add', [ServiceController::class, 'store']);
 
 
 Route::group(['middleware' => 'kitchen'], function() {
-    Route::get('getStatus',[OrderController::class,'getStatus']);
+    Route::get('getStatus',[OrderController::class,'getStatus']);//get orders for kitchen
     Route::post('ChangeToPreparing',[OrderController::class,'ChangeToPreparing']);
     Route::post('ChangeToDone',[OrderController::class,'ChangeToDone']);
 });

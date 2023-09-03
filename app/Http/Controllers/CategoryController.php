@@ -63,28 +63,24 @@ class CategoryController extends Controller
                 if ($request->position > $highest_position) {
                     $category->position = $highest_position+1;
                 } else {
-                   foreach($categories as $cat){
-                        if($request->position == $cat->position  &&$cat->position != null ){
-                            // $cat->position++;
+                    foreach($categories as $cat){
+                        if($cat->position >= $request->position && $cat->position != null ){
+                            $cat->position++;
                             $cat->save();
-                            for($i = $request->position ; $i < count($categories) ; $i++){
-                                $categories[$i]->position++; // Increment the position by 1
-                                $categories[$i]->save();
-                            }
-                            
                         } 
-                    
-                   }
+                    }
                     $category->position = $request->position;
                 }
                 
             }else{
                 $category->position = 1 ;
             } 
+            
         }
         
-        
         $category->save();
+
+        $this->reOrder();
         
         if(! $category) {
             return $this->apiResponse(null,'Data Not Save',400);
@@ -133,22 +129,19 @@ class CategoryController extends Controller
                     $category->position = $highest_position+1;
                 } else {
                     foreach($categories as $cat){
-                        if($request->position == $cat->position  &&$cat->position != null ){
-                            // $cat->position++;
+                        if($cat->position >= $request->position && $cat->position != null ){
+                            $cat->position++;
                             $cat->save();
-                            for($i = $request->position ; $i < count($categories) ; $i++){
-                                $categories[$i]->position++; // Increment the position by 1
-                                $categories[$i]->save();
-                            }
-                            
                         } 
-                    
-                   }
+                    }
                     $category->position = $position;
                 }
             }
             
             $category->save();
+
+            $this->reOrder();
+
 
             return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);
         }
@@ -173,6 +166,19 @@ class CategoryController extends Controller
             return $this->apiResponse(null,'The Data deleted',200);
         }
 
+    }
+
+    public function reOrder(){
+        $categories = Category::orderBy('position','ASC')->get();
+        $i = 1;
+        foreach($categories as $category){
+            if($category->position !=null){
+                $category->position = $i;
+                $category->save();
+                $i++;
+            }
+          
+        }
     }
 
     

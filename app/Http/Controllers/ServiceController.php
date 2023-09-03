@@ -27,6 +27,7 @@ class ServiceController extends Controller
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
+            'order_id' => 'exists:orders,id',
             'feedback' => 'nullable|string',
             'service_rate' => 'nullable|integer|between:1,5',
         ]);

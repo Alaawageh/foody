@@ -19,6 +19,7 @@ class ServiceResource extends JsonResource
             'id'=>$this->id,
             'feedback'=>$this->feedback,
             'service rate' => $this->service_rate,
+            'order' => OrderResource::make($this->order)
         ];
     }
 }

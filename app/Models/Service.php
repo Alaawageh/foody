@@ -10,7 +10,11 @@ class Service extends Model
     use HasFactory;
     
     protected $fillable =[
-        'feedback', 'service_rate',
+        'order_id','feedback', 'service_rate',
     ];
+
+    public function order(){
+        return $this->belongsTo(Order::class);
+    }
    
 }

@@ -34,7 +34,9 @@ class Order extends Model
         return $this->belongsToMany(Ingredient::class, 'orders_ingredients')->withPivot('order_id', 'ingredient_id');
     }
     
-    
+   public function services(){
+    return $this->hasMany(Service::class);
+   } 
 
     
     

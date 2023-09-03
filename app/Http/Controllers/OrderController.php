@@ -14,6 +14,7 @@ use App\Models\Ingredient;
 use App\Models\OrderIngredient;
 use App\Models\OrderProduct;
 use App\Models\Product;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -100,7 +101,6 @@ class OrderController extends Controller
                         $orderIngredient = new OrderIngredient();
                         $orderIngredient->order_id = $order->id;
                         $orderIngredient->ingredient_id = $ingredientData['ingredient_id'];
-                        // $orderIngredient->quantity = $ingredientData['quantity'];
                         $orderIngredient->save();
 
                        
@@ -270,7 +270,9 @@ class OrderController extends Controller
     public function GetStatusOrder(Request $request)
     {
         $order = Order::where('table_num',$request->table_num)->where('status','Befor_Preparing')->latest()->first();
-
+        if(! $order){
+            return $this->apiResponse(null,'This order is under preparation',404);
+        }
         return $this->apiResponse(OrderResource::make($order),'success',200);
         
     } 
@@ -280,7 +282,7 @@ class OrderController extends Controller
         $orders = Order::where('status','=','Befor_Preparing')->get();
         
         if($orders->isNotEmpty()){
-            return $this->apiResponse($orders, 'This order Befor_Preparing', 201);
+            return $this->apiResponse(OrderResource::collection($orders), 'This order Befor_Preparing', 201);
 
         }else{
             return $this->apiResponse(null, ' Not Found', 404);
@@ -300,7 +302,7 @@ class OrderController extends Controller
             ]);
             $order->save();
            
-            return $this->apiResponse($order, 'Changes saved successfully', 201);
+            return $this->apiResponse(OrderResource::make($order), 'Changes saved successfully', 201);
 
         }else{
              return $this->apiResponse(null, ' Not Found', 404);
@@ -319,7 +321,7 @@ class OrderController extends Controller
             ]);
             $order->save();
             event(new ToCasher($order));
-            return $this->apiResponse($order, 'Changes saved successfully', 201);
+            return $this->apiResponse(OrderResource::make($order), 'Changes saved successfully', 201);
         }else{
              return $this->apiResponse(null, ' Not Found', 404);
             
@@ -330,7 +332,7 @@ class OrderController extends Controller
         $orders = Order::where('status','Done')->where('is_paid',0)->get();
         
         if($orders->isNotEmpty()){
-            return $this->apiResponse($orders, 'This orders Not Paid Yet', 201);
+            return $this->apiResponse(OrderResource::collection($orders), 'This orders Not Paid Yet', 201);
         }else{
             return $this->apiResponse(null, 'There are no ready orders', 404);
         }
@@ -338,17 +340,17 @@ class OrderController extends Controller
     public function ChangePaid(Request $request)
     {
 
-        $order = Order::where('id',$request->check_id)->first();
+        $order = Order::where('id',$request->check_id)->where('status','Done')->where('is_paid',0)->first();
         
         if(!$order){
-            return $this->apiResponse(null, 'Order Not Found', 404);
+            return $this->apiResponse(null, 'Order Not Found Or Status Order Not Done', 404);
         }else{
             $order->update([
                 'is_paid' => '1',
             ]);
             $order->save();
         }
-        return $this->apiResponse($order, ' Payment status changed successfully', 201);
+        return $this->apiResponse(OrderResource::make($order), ' Payment status changed successfully', 201);
          
         
     }
@@ -365,13 +367,20 @@ class OrderController extends Controller
     }
 
     
-    public function getOrder(Request $request)
+    public function getOrderforRate(Request $request)
     {
         $order = Order::where('table_num',$request->table_num)->where('status','Done')->latest()->first();
         if(!$order){
             return $this->apiResponse(null,'not found',404);
         }
-        return $this->apiResponse(OrderResource::make($order),'success',200);
+        $orderForRate = Service::where('order_id',$order->id)->first();
+       
+        if(! $orderForRate){
+            return $this->apiResponse(OrderResource::make($order),'success',200);
+        }else{
+            return $this->apiResponse(null,'The order has not been evaluated yet',404);
+        }
+        
         
     }
 }

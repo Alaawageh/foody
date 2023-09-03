@@ -21,8 +21,8 @@ class OrderResource extends JsonResource
             'time' => $this->time,
             'time_end' => $this->time_end,
             'status' => $this->status,
+            'is_paid' => $this->is_paid,
             'products' => ProductResource::collection($this->products),
-            // 'ingredients'=>IngredientResource::collection($this->ingredients),
                    
         ];
     }
