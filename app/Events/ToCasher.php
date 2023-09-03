@@ -13,7 +13,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Pusher\Pusher;
 
-class NewOrder implements ShouldBroadcast
+class ToCasher implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -27,20 +27,18 @@ class NewOrder implements ShouldBroadcast
     public function broadcastOn()
     {
         return [
-            new Channel('order'),
+            new Channel('Casher'),
         ];
     }
-
     public function broadcastWith()
     {
         return [
-            'order' => new OrderResource($this->order)
+            'Casher' => new OrderResource($this->order)
         ];
     }
-
     public function broadcastAs()
     {
-        return 'newOrder';
+        return 'ToCasher';
     }
 
     public function broadcastWhen()
@@ -53,7 +51,8 @@ class NewOrder implements ShouldBroadcast
         $pusher = new Pusher(env('PUSHER_APP_KEY'), env('PUSHER_APP_SECRET'), env('PUSHER_APP_ID'), [
             'cluster' => env('PUSHER_APP_CLUSTER'),
         ]);
-        $pusher->trigger('order', 'newOrder', ['order_id' => $this->order->id]);
+        $pusher->trigger('Casher', 'ToCasher', ['order_id' => $this->order->id]);
     }
+
 
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\NewOrder;
 use App\Events\OrderNotification;
+use App\Events\ToCasher;
 use App\Exports\OrdersExport;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -124,8 +125,8 @@ class OrderController extends Controller
         $order->save();
         if ($order)
         {
-            event(new NewOrder($order->load('products')));
-            return $this->apiResponse(new OrderResource($order->load(['products'])), 'The order Save', 201);
+            event(new NewOrder($order));
+            return $this->apiResponse(new OrderResource($order), 'The order Save', 201);
         }else{
             return $this->apiResponse(null, 'The order Not Save', 400);
         }
@@ -199,13 +200,13 @@ class OrderController extends Controller
                             $orderIngredient = new OrderIngredient();
                             $orderIngredient->order_id = $order->id;
                             $orderIngredient->ingredient_id = $ingredientData['ingredient_id'];
-                            $orderIngredient->quantity = $ingredientData['quantity'];
+                            // $orderIngredient->quantity = $ingredientData['quantity'];
                             $orderIngredient->save();
 
                             
 
                             // Calculate the ingredient subtotal
-                            $ingredientSubtotal = $ingredientPrice * $ingredientData['quantity'];
+                            $ingredientSubtotal = $ingredientPrice ;
 
                             // Add the ingredient subtotal to the total price
                             $totalPrice += $ingredientSubtotal;
@@ -220,9 +221,9 @@ class OrderController extends Controller
             $order->total_price = $totalPrice + ($totalPrice * $orderTaxRate);
             $order->save();
 
-            event(new NewOrder($order->load(['products','ingredients'])));
+            event(new NewOrder($order));
 
-            return $this->apiResponse(new OrderResource($order->load(['products','ingredients'])), 'The order updated successfully', 200);
+            return $this->apiResponse(new OrderResource($order), 'The order updated successfully', 200);
         }else{
             return $this->apiResponse(null, 'It is not possible to modify your order. The order is in preparation ', 400); 
         }
@@ -270,7 +271,7 @@ class OrderController extends Controller
     {
         $order = Order::where('table_num',$request->table_num)->where('status','Befor_Preparing')->latest()->first();
 
-        return $this->apiResponse(OrderResource::collection($order),'success',200);
+        return $this->apiResponse(OrderResource::make($order),'success',200);
         
     } 
 
@@ -317,6 +318,7 @@ class OrderController extends Controller
                 'time_end' => Carbon::now()->format('H:i:s'),
             ]);
             $order->save();
+            event(new ToCasher($order));
             return $this->apiResponse($order, 'Changes saved successfully', 201);
         }else{
              return $this->apiResponse(null, ' Not Found', 404);

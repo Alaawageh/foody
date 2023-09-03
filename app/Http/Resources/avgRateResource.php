@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class HomeResource extends JsonResource
+class avgRateResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,10 +14,9 @@ class HomeResource extends JsonResource
      */
     public function toArray($request)
     {
-        // return parent::toArray($request);
         return [
-            'product' => $this->product->name,
-            'total' => $this->most_order,
+            'average rating'=>round($this->average_rating),
+            'prodcut' => $this->product->name
         ];
     }
 }

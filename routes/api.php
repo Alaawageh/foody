@@ -100,6 +100,7 @@ Route::group(['middleware' => ['auth:api' ,'admin']], function () {
     Route::get('/order/orderByDay',[HomeController::class,'ordersByDay']);
     Route::get('/mostRatedProduct', [HomeController::class, 'mostRatedProduct']);//منتج اكثر تقييم
     Route::get('/leastRatedProduct', [HomeController::class, 'leastRatedProduct']);//منتج اقل تقييم
+    Route::get('/order/totalOrders',[OrderController::class,'TotalOrderByMonth']);//اجمالي الاوردرات لكل شهر
 
   
     //Order_Apis
@@ -107,9 +108,7 @@ Route::group(['middleware' => ['auth:api' ,'admin']], function () {
     Route::get('/show_order/{id}', [OrderController::class, 'show']);
     Route::post('/delete_order/{id}', [OrderController::class, 'destroy']);
     Route::get('/export-order-report', [OrderController::class, 'exportOrderReport']);//تصدير اكسل 
-    Route::get('/order/totalOrders',[OrderController::class,'TotalOrderByMonth']);//اجمالي الاوردرات لكل شهر
-    // Route::get('/order/Ratedorder',[OrderController::class,'mostRatedorder']);//الاوردرات الاكثر تقييما
-    // Route::get('/order/mostFeedbackedOrder',[OrderController::class,'mostFeedbackedOrder']);
+
 
     Route::post('/store_offer', [OfferController::class, 'store']);
     Route::post('/delete_offer/{id}', [OfferController::class, 'destroy']);

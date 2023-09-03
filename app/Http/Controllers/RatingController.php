@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\avgRateResource;
 use App\Http\Resources\RatingResource;
 use App\Models\Rating;
 use Illuminate\Http\Request;
@@ -75,11 +76,14 @@ class RatingController extends Controller
     
     public function avgRating()
     {
-        $average_rating = Rating::selectRaw('AVG(value) as average_rating , product_id')->get();
+        $average_rating = Rating::selectRaw('AVG(value) as average_rating , product_id')
+        ->groupBy('product_id')
+        ->orderBy('average_rating')
+        ->get();
 
         if($average_rating)
         {
-            return $this->apiResponse(round($average_rating),'this rating from all user for this product',200);
+            return $this->apiResponse(avgRateResource::collection($average_rating),'this rating from all user for this product',200);
         }
         return $this->apiResponse(null,'No product has been requested yet',404);
     }

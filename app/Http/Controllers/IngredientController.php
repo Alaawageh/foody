@@ -65,11 +65,7 @@ class IngredientController extends Controller
         }
         
         $ingredient = Ingredient::create($request->except('image'));
-        if($request->hasFile('image'))
-        {
-            $image = $request->file('image');
-            $ingredient->setImageAttribute($image);
-        }
+
         if (! $ingredient)
         {
             return $this->apiResponse(null,'Data Not Saved',400);

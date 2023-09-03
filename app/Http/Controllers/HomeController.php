@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\HomeResource;
 use App\Http\Resources\OrderResource;
+use App\Http\Resources\PeakHourResource;
+use App\Http\Resources\RateProductResource;
+use App\Http\Resources\RatingResource;
 use App\Http\Resources\ReadyOrderResource;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Product;
+use App\Models\Rating;
 use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -92,7 +96,7 @@ class HomeController extends Controller
             
     }
     public function avgRating() {
-        $avgRating = Service::selectRaw('AVG(service_rate) as Service_Rate')->orderByRae('AVG(service_rate) DESC')->get();
+        $avgRating = Service::selectRaw('AVG(service_rate) as Service_Rate')->orderByRaw('AVG(service_rate) DESC')->get();
         if(! $avgRating ) {
             return $this->apiResponse(null,'Not Found',404);
         }else{
@@ -103,7 +107,7 @@ class HomeController extends Controller
     public function peakTimes()
     {
     
-    $peakHours = Order::select('time')->groupBy('time')->orderByRaw('COUNT(time) DESC')->get();
+    $peakHours = Order::selectRaw('HOUR(time) as peakHours')->groupBy('time')->orderBYRaw('COUNT(HOUR(time))')->first();
     if ($peakHours) {
         return $this->apiResponse($peakHours,'This time is peak time',200);
     } else {
@@ -121,17 +125,15 @@ class HomeController extends Controller
     }
     public function mostRatedProduct()
     {
-        $mostRatedProduct = DB::table('products')
-        ->join('ratings', 'products.id', '=', 'ratings.product_id')
-        ->select('products.name', DB::raw('AVG(ratings.value) as average_rating'))
-        ->groupBy('products.name')
-        ->orderBy('average_rating','DESC')
-        ->limit('5')
+        $mostRatedProduct = Rating::selectRaw('SUM(value) as RateProduct , product_id')
+        ->groupBy('product_id')
+        ->orderByRaw('SUM(value) DESC')
+        ->limit(5)
         ->get();
 
         if($mostRatedProduct)
         {
-            return $this->apiResponse($mostRatedProduct,'The most rated product',200);
+            return $this->apiResponse(RateProductResource::collection($mostRatedProduct),'The most rated product',200);
 
         }else{
             return $this->apiResponse(null,'No product has been Rated yet',404);
@@ -139,17 +141,15 @@ class HomeController extends Controller
     }
 
     public function leastRatedProduct(){
-        $mostRatedProduct = DB::table('products')
-        ->join('ratings', 'products.id', '=', 'ratings.product_id')
-        ->select('products.name', DB::raw('AVG(ratings.value) as average_rating'))
-        ->groupBy('products.name')
-        ->orderBy('average_rating','ASC')
-        ->limit('5')
+        $leastRatedProduct = Rating::selectRaw('SUM(value) as RateProduct , product_id')
+        ->groupBy('product_id')
+        ->orderByRaw('SUM(value) ASC')
+        ->limit(5)
         ->get();
 
-        if($mostRatedProduct)
+        if($leastRatedProduct)
         {
-            return $this->apiResponse($mostRatedProduct,'The most rated product',200);
+            return $this->apiResponse(RateProductResource::collection($leastRatedProduct),'The least rated product',200);
 
         }else{
             return $this->apiResponse(null,'No product has been Rated yet',404);

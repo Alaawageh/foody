@@ -64,12 +64,15 @@ class CategoryController extends Controller
                     $category->position = $highest_position+1;
                 } else {
                    foreach($categories as $cat){
-                    $positions = explode(',',$cat->position);
-
-                    if(in_array($request->position, $positions)){
-                        $cat->position++;
-                        $cat->save();
-                    }
+                        if($request->position == $cat->position  &&$cat->position != null ){
+                            // $cat->position++;
+                            $cat->save();
+                            for($i = $request->position ; $i < count($categories) ; $i++){
+                                $categories[$i]->position++; // Increment the position by 1
+                                $categories[$i]->save();
+                            }
+                            
+                        } 
                     
                    }
                     $category->position = $request->position;
@@ -129,17 +132,22 @@ class CategoryController extends Controller
                 if ($position > $highest_position ) {
                     $category->position = $highest_position+1;
                 } else {
-                    foreach ($categories as $cat) {
-                        if ($cat->id != $id && $cat->position >= $position && $position !== null) {
-                            $cat->position++;
+                    foreach($categories as $cat){
+                        if($request->position == $cat->position  &&$cat->position != null ){
+                            // $cat->position++;
                             $cat->save();
-                        }
-                        
-                    }
+                            for($i = $request->position ; $i < count($categories) ; $i++){
+                                $categories[$i]->position++; // Increment the position by 1
+                                $categories[$i]->save();
+                            }
+                            
+                        } 
+                    
+                   }
                     $category->position = $position;
                 }
             }
-            // $category->position = $position;
+            
             $category->save();
 
             return $this->apiResponse(new CategoryResource($category),'Data successfully saved',201);

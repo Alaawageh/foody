@@ -99,7 +99,7 @@ class ProductController extends Controller
 
         if ($request->position) {
             
-            $products = Product::orderBy('position')->get();
+            $products = Product::where('category_id',$request->category_id)->orderBy('position')->get();
             
             if ($products->isNotEmpty()) {
                 $highest_position = $products->last()->position;
@@ -107,11 +107,17 @@ class ProductController extends Controller
                     $product->position = $highest_position+1;
                 } else {
                     foreach ($products as $pro) {
-                        if ($pro->position >= $request->position && $request->position !== null) {
+                        if($request->position == $pro->position  &&$pro->position != null ){
                             $pro->position++;
                             $pro->save();
+                            for($i = $request->position ; $i < count($products) ; $i++){
+                                $products[$i]->position++; // Increment the position by 1
+                                $products[$i]->save();
+                            }
+                            
                         }
                     }
+                    $product->position = $request->position;
                 }
             }else{
                 $product->position = 1 ;
@@ -178,10 +184,15 @@ class ProductController extends Controller
                 } else {
                     // adjust positions of existing categories and update position of current category
                     foreach ($products as $pro) {
-                        if ($pro->id != $id && $pro->position >= $position && $position !== null) {
-                            $pro->position++;
+                        if($request->position == $pro->position  &&$pro->position != null ){
+                            // $pro->position++;
                             $pro->save();
-                        }
+                            for($i = $request->position ; $i < count($products) ; $i++){
+                                $products[$i]->position++; // Increment the position by 1
+                                $products[$i]->save();
+                            }
+                            
+                        } 
                     }
                     $product->position = $position;
                 }
