@@ -161,13 +161,26 @@ class HomeController extends Controller
     public function statistics(Request $request) {
         $start = $request->start;
         $end = $request->end;
-        $order = Order::selectRaw('SUM(total_price) as total_sales , AVG(total_price) as avg_sales , MAX(total_price) as max_sales , COUNT(id) as total_orders , round(avg(id)) as avg_orders')
-        ->whereBetween('created_at',[$start,$end])
-        ->get();
-        if ($order) {
-            return $this->apiResponse($order,'success',200);
-        } else {
-            return $this->apiResponse(null,'Not Found',404);
+        if($end){
+            $order = Order::selectRaw('SUM(total_price) as total_sales , AVG(total_price) as avg_sales , MAX(total_price) as max_sales , COUNT(id) as total_orders , round(avg(id)) as avg_orders')
+            ->whereBetween('created_at',[$start,$end])
+            ->get();
+            if ($order) {
+                return $this->apiResponse($order,'success',200);
+            } else {
+                return $this->apiResponse(null,'Not Found',404);
+            }
+        }else{
+            $order = Order::selectRaw('SUM(total_price) as total_sales , AVG(total_price) as avg_sales , MAX(total_price) as max_sales , COUNT(id) as total_orders , round(avg(id)) as avg_orders')
+            ->where('created_at',$start)
+            ->get();
+            if ($order) {
+                return $this->apiResponse($order,'success',200);
+            } else {
+                return $this->apiResponse(null,'Not Found',404);
+            }
         }
+
+
     }
 }
