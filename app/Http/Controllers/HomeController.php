@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\HomeResource;
-use App\Http\Resources\OrderResource;
-use App\Http\Resources\PeakHourResource;
 use App\Http\Resources\RateProductResource;
 use App\Http\Resources\RatingResource;
 use App\Http\Resources\ReadyOrderResource;
+use App\Http\Resources\StatisticsResource;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Product;
@@ -110,7 +109,7 @@ class HomeController extends Controller
     public function peakTimes()
     {
     
-    $peakHours = Order::selectRaw('HOUR(time) as peakHours')->groupBy('time')->orderBYRaw('COUNT(HOUR(time))')->first();
+    $peakHours = Order::selectRaw('HOUR(time) as Hour')->groupByRaw('HOUR(time)')->orderBYRaw('COUNT(HOUR(time)) DESC')->limit(5)->get();
     if ($peakHours) {
         return $this->apiResponse($peakHours,'This time is peak time',200);
     } else {
@@ -156,6 +155,19 @@ class HomeController extends Controller
 
         }else{
             return $this->apiResponse(null,'No product has been Rated yet',404);
+        }
+    }
+
+    public function statistics(Request $request) {
+        $start = $request->start;
+        $end = $request->end;
+        $order = Order::selectRaw('SUM(total_price) as total_sales , AVG(total_price) as avg_sales , MAX(total_price) as max_sales , COUNT(id) as total_orders , round(avg(id)) as avg_orders')
+        ->whereBetween('created_at',[$start,$end])
+        ->get();
+        if ($order) {
+            return $this->apiResponse($order,'success',200);
+        } else {
+            return $this->apiResponse(null,'Not Found',404);
         }
     }
 }

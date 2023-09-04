@@ -99,6 +99,7 @@ Route::group(['middleware' => ['auth:api' ,'admin']], function () {
     Route::get('/service/avgRating',[HomeController::class,'avgRating']);
     Route::get('/peakTimes',[HomeController::class,'peakTimes']);
     Route::get('/order/orderByDay',[HomeController::class,'ordersByDay']);
+    Route::post('/statistics',[HomeController::class,'statistics']);
     Route::get('/mostRatedProduct', [HomeController::class, 'mostRatedProduct']);//منتج اكثر تقييم
     Route::get('/leastRatedProduct', [HomeController::class, 'leastRatedProduct']);//منتج اقل تقييم
     Route::get('/order/totalOrders',[OrderController::class,'TotalOrderByMonth']);//اجمالي الاوردرات لكل شهر
