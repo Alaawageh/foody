@@ -23,8 +23,9 @@ class HomeController extends Controller
 
     public function TotalSalesByMonth()
     {
-        $totalSales= Order::selectRaw('SUM(total_price) as total , MONTH(created_at) as month ')
-        ->groupBy('month')
+        $totalSales= Order::selectRaw('SUM(total_price) as total , MONTH(created_at) as month , YEAR(created_at) as year')
+        ->groupBy('month','year')
+        ->orderByRaw('year DESC , month ASC')
         ->get();
         return $this->apiResponse($totalSales,'success',200);
 
@@ -32,8 +33,9 @@ class HomeController extends Controller
 
     public function maxSales()
     {
-        $maxSales= Order::selectRaw('MAX(total_price) as Max_Sales , MONTH(created_at) as month')
-        ->groupBy('month')
+        $maxSales= Order::selectRaw('MAX(total_price) as Max_Sales , MONTH(created_at) as month , YEAR(created_at) as year')
+        ->groupBy('month','year')
+        ->orderByRaw('year DESC , month ASC')
         ->get();
         return $this->apiResponse($maxSales,'success',200);
 
@@ -43,6 +45,7 @@ class HomeController extends Controller
     {
         $avgSalesByYear = Order::selectRaw('round(AVG(total_price)) as Average_Sales , YEAR(created_at) as year')
         ->groupBy('year')
+        ->orderByRaw('year DESC')
         ->get();
         
         return $this->apiResponse(($avgSalesByYear),'success',200);
