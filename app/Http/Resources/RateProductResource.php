@@ -16,7 +16,7 @@ class RateProductResource extends JsonResource
     {
         return [
             'product' => $this->product->name,
-            'Rate product'=> $this->RateProduct,
+            'Rate_product'=> $this->RateProduct,
         ];
     }
 }

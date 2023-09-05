@@ -17,7 +17,7 @@ class IngredientResource extends JsonResource
         return [
             'id'=>$this->id,
             'name'=>$this->name,
-            'name trans' => $this->name_trans,
+            'name_trans' => $this->name_trans,
             'price_by_piece'=>$this->price_by_piece,
             'image' => url($this->image),
             'branch_id'=>$this->branch_id

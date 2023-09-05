@@ -15,6 +15,7 @@ class OrderResource extends JsonResource
      */
     public function toArray($request)
     {
+
         return [
             'id' => $this->id,
             'table_num' => $this->table_num,
@@ -23,10 +24,9 @@ class OrderResource extends JsonResource
             'time_end' => $this->time_end,
             'status' => $this->status,
             'is_paid' => $this->is_paid,
-            'products' => ProResource::collection($this->products),
-            'ingredients'=>IngredientResource::collection($this->ingredients),
-            
-                   
+            'products' => OrderProductResource::collection($this->products),     
         ];
     }
+
+
 }

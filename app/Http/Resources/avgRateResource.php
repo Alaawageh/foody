@@ -15,7 +15,7 @@ class avgRateResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'average rating'=>round($this->average_rating),
+            'average_rating'=>round($this->average_rating),
             'prodcut' => $this->product->name
         ];
     }
