@@ -2,17 +2,15 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Ingredient;
+use App\Models\OrderIngredient;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
-     */
+
+
     public function toArray($request)
     {
 
@@ -24,9 +22,15 @@ class OrderResource extends JsonResource
             'time_end' => $this->time_end,
             'status' => $this->status,
             'is_paid' => $this->is_paid,
-            'products' => OrderProductResource::collection($this->products),     
+            'products' => OrderProductResource::collection($this->products),
+            
+            // 'ingredients'=>OrderIngredientResource::collection($this->ingredients),
+            // 't' => $this->products->collection('price'),
         ];
     }
+
+
+   
 
 
 }

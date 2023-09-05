@@ -102,14 +102,9 @@ class OrderController extends Controller
                         $orderIngredient->order_id = $order->id;
                         $orderIngredient->ingredient_id = $ingredientData['ingredient_id'];
                         $orderIngredient->save();
-
-                       
-
-                        // Calculate the ingredient subtotal
-                        $ingredientSubtotal = $ingredientPrice;
                         
                         // Add the ingredient subtotal to the total price
-                        $totalPrice += $ingredientSubtotal;
+                        $totalPrice += $ingredientPrice;
                     }
                 }
             }
@@ -126,7 +121,7 @@ class OrderController extends Controller
         if ($order)
         {
             event(new NewOrder($order));
-            return $this->apiResponse(new OrderResource($order), 'The order Save', 201);
+            return $this->apiResponse( OrderResource::make($order)->with($productData['ingredients']), 'The order Save', 201);
         }else{
             return $this->apiResponse(null, 'The order Not Save', 400);
         }
@@ -367,9 +362,9 @@ class OrderController extends Controller
     }
 
     
-    public function getOrderforRate(Request $request)
+    public function getOrderforRate($table_num)
     {
-        $order = Order::where('table_num',$request->table_num)->where('status','Done')->latest()->first();
+        $order = Order::where('table_num',$table_num)->where('status','Done')->latest()->first();
         if(!$order){
             return $this->apiResponse(null,'not found',404);
         }
@@ -377,8 +372,11 @@ class OrderController extends Controller
        
         if(! $orderForRate){
             return $this->apiResponse(OrderResource::make($order),'success',200);
+            
+
         }else{
-            return $this->apiResponse(null,'The order has not been evaluated yet',404);
+            return $this->apiResponse(null,'The order has evaluate',404);
+
         }
         
         

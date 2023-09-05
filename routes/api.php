@@ -50,7 +50,7 @@ Route::post('/cart/add', [OrderController::class, 'store']);
 Route::post('GetStatusOrder',[OrderController::class,'GetStatusOrder']);//get order for edit order
 Route::put('/cart/update/{id}', [OrderController::class, 'update']);
 
-Route::post('cart/rate',[OrderController::class,'getOrderforRate']);//get order for rating
+Route::get('cart/rate/{table_num}',[OrderController::class,'getOrderforRate']);//get order for rating
 
 Route::post('/store_rating', [RatingController::class, 'store']);
 
