@@ -121,7 +121,7 @@ class OrderController extends Controller
         if ($order)
         {
             event(new NewOrder($order));
-            return $this->apiResponse( OrderResource::make($order)->with($productData['ingredients']), 'The order Save', 201);
+            return $this->apiResponse(new OrderResource($order), 'The order Save', 201);
         }else{
             return $this->apiResponse(null, 'The order Not Save', 400);
         }

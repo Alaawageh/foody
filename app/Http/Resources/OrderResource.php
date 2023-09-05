@@ -22,10 +22,7 @@ class OrderResource extends JsonResource
             'time_end' => $this->time_end,
             'status' => $this->status,
             'is_paid' => $this->is_paid,
-            'products' => OrderProductResource::collection($this->products),
-            
-            // 'ingredients'=>OrderIngredientResource::collection($this->ingredients),
-            // 't' => $this->products->collection('price'),
+            'products' => ProductResource::collection($this->products),
         ];
     }
 
